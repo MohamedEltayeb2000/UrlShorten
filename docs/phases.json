@@ -70,7 +70,7 @@
                        "id":  "P3",
                        "name":  "Orchestration core",
                        "status":  "COMPLETE",
-                       "publish":  null,
+                       "publish":  "PUBLISHED",
                        "capabilities":  [
                                             "Graph definition + validation",
                                             "State machine",
