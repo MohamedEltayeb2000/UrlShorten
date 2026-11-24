@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
 import RunsPage from './pages/RunsPage'
 import ShortenPage from './pages/ShortenPage'
+import ArtifactsPage from './pages/ArtifactsPage'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<ShortenPage />} />
           <Route path="/runs" element={<RunsPage />} />
+          <Route path="/runs/:id/artifacts" element={<ArtifactsPage />} />
           <Route path="*" element={<p>Page not found.</p>} />
         </Routes>
       </main>
