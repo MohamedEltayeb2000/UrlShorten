@@ -69,7 +69,7 @@
                    {
                        "id":  "P3",
                        "name":  "Orchestration core",
-                       "status":  "NOT_STARTED",
+                       "status":  "COMPLETE",
                        "publish":  null,
                        "capabilities":  [
                                             "Graph definition + validation",
