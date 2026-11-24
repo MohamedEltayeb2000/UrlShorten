@@ -1,6 +1,8 @@
 # Publishes a completed phase. Usage: scripts/publish-phase.ps1 -Phase N [-DryRun]
 #  -DryRun: verify recorded gate results and report what would happen; commits/pushes nothing.
-param([Parameter(Mandatory = $true)][int]$Phase, [switch]$DryRun, [switch]$SkipDependencyCheck)
+#  -AllowNotRun GATE: owner-approved waiver for a gate that could not run (NOT_RUN only, never FAIL).
+#                     The waiver is recorded in docs/publish-log.md and in the commit message.
+param([Parameter(Mandatory = $true)][int]$Phase, [switch]$DryRun, [switch]$SkipDependencyCheck, [string[]]$AllowNotRun = @())
 . "$PSScriptRoot/lib.ps1"
 $root = Get-Root
 function Stop-Publish([string]$reason) { Write-Host "REFUSED: $reason"; exit 1 }
@@ -9,8 +11,9 @@ if (-not $DryRun) {
     $ga = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'gate-all.ps1'), '-Phase', $Phase)
     if ($SkipDependencyCheck) { $ga += '-SkipDependencyCheck' }
     & powershell @ga | Out-Host
-    if ($LASTEXITCODE -ne 0) { Stop-Publish "gates are not all green for phase $Phase" }
+    if ($LASTEXITCODE -ne 0 -and $AllowNotRun.Count -eq 0) { Stop-Publish "gates are not all green for phase $Phase" }
 }
+$waived = @()
 
 # Verify recorded gate results
 $resultFile = Join-Path $root "docs/gates/phase-$Phase.json"
@@ -20,6 +23,7 @@ $required = @('TESTS', 'SECURITY', 'REVIEW', 'PERF', 'EVAL')
 foreach ($g in $required) {
     $entry = $res.gates.$g
     if (-not $entry) { Stop-Publish "gate $g has no result for phase $Phase" }
+    if ($entry.outcome -eq 'NOT_RUN' -and ($AllowNotRun -contains $g)) { $waived += $g; continue }
     if ($entry.outcome -ne 'PASS' -and $entry.outcome -ne 'SKIPPED') { Stop-Publish "gate $g is $($entry.outcome)" }
 }
 
@@ -47,6 +51,7 @@ $scan = Invoke-SecretScan -Path $root -ConfigPath (Join-Path $root '.gitleaks.to
 if (-not $scan.ran -or $scan.leaks -gt 0) { Pop-Location; Stop-Publish "secret scan did not pass: $($scan.output)" }
 # Several focused commits per phase instead of one big commit (owner request).
 $trailer = 'Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>'
+$waiverNote = if ($waived.Count -gt 0) { "WAIVED by owner (gate could not run): $($waived -join ', ')" } else { 'all gates passed.' }
 $groups = @(
     @{ paths = @('backend');                         label = 'backend code and tests' },
     @{ paths = @('frontend');                        label = 'frontend code and tests' },
@@ -60,7 +65,7 @@ foreach ($g in $groups) {
     & git add -- @existing 2>$null
     & git diff --cached --quiet
     if ($LASTEXITCODE -ne 0) {
-        & git commit -q -m "phase-${Phase}: $($g.label)" -m "$($name.name) - all gates passed." -m $trailer 2>&1 | Out-Host
+        & git commit -q -m "phase-${Phase}: $($g.label)" -m "$($name.name) - $waiverNote" -m $trailer 2>&1 | Out-Host
     }
 }
 & git add -A
@@ -78,6 +83,7 @@ Pop-Location
 Set-PhaseStatus -Phase $Phase -Status 'COMPLETE' -Publish $state
 $logFile = Join-Path $root 'docs/publish-log.md'
 if (-not (Test-Path $logFile)) { Set-Content $logFile "# Publish log`n`n| Phase | Branch | Commit | State | Time (UTC) |`n|---|---|---|---|---|" -Encoding utf8 }
-Add-Content $logFile "| P$Phase | $branch | $commit | $state | $((Get-Date).ToUniversalTime().ToString('s')) |" -Encoding utf8
+$note = if ($waived.Count -gt 0) { " (waived: $($waived -join ', '))" } else { '' }
+Add-Content $logFile "| P$Phase | $branch | $commit | $state$note | $((Get-Date).ToUniversalTime().ToString('s')) |" -Encoding utf8
 Write-Host "Phase $Phase recorded as $state (commit $commit, tag phase-$Phase)."
 exit 0
