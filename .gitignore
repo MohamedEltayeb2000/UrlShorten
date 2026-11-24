@@ -18,3 +18,4 @@ docs/perf/results-latest.jsonl
 backend/.mvn/
 .opencode/
 .claude/settings.local.json
+.claude/worktrees/
