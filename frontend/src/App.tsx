@@ -1,4 +1,5 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
+import RunsPage from './pages/RunsPage'
 import ShortenPage from './pages/ShortenPage'
 
 export default function App() {
@@ -10,11 +11,13 @@ export default function App() {
           <NavLink to="/" end>
             Shorten
           </NavLink>
+          <NavLink to="/runs">Runs</NavLink>
         </nav>
       </header>
       <main>
         <Routes>
           <Route path="/" element={<ShortenPage />} />
+          <Route path="/runs" element={<RunsPage />} />
           <Route path="*" element={<p>Page not found.</p>} />
         </Routes>
       </main>
