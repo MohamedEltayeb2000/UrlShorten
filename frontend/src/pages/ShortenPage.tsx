@@ -1,15 +1,18 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react'
-import { createLink, listLinks, Link } from '../api/links'
+import { createLink, deactivateLink, listLinks, Link } from '../api/links'
+import AnalyticsPanel from '../components/AnalyticsPanel'
 
 export default function ShortenPage() {
   const [url, setUrl] = useState('')
   const [alias, setAlias] = useState('')
+  const [expires, setExpires] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [created, setCreated] = useState<Link | null>(null)
   const [copied, setCopied] = useState(false)
   const [links, setLinks] = useState<Link[] | null>(null)
   const [listError, setListError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
   const errorRef = useRef<HTMLParagraphElement>(null)
 
   const load = useCallback(async () => {
@@ -20,6 +23,7 @@ export default function ShortenPage() {
       setListError((e as Error).message)
       setLinks([])
     }
+    setRefreshKey((k) => k + 1)
   }, [])
 
   useEffect(() => {
@@ -37,9 +41,11 @@ export default function ShortenPage() {
     setCreated(null)
     setCopied(false)
     try {
-      setCreated(await createLink(url, alias.trim()))
+      const expiresAt = expires ? new Date(expires).toISOString() : undefined
+      setCreated(await createLink(url, alias.trim(), expiresAt))
       setUrl('')
       setAlias('')
+      setExpires('')
       void load()
     } catch (err) {
       setError((err as Error).message)
@@ -55,6 +61,15 @@ export default function ShortenPage() {
       setCopied(true)
     } catch {
       setCopied(false)
+    }
+  }
+
+  async function deactivate(code: string) {
+    try {
+      await deactivateLink(code)
+      void load()
+    } catch (err) {
+      setError((err as Error).message)
     }
   }
 
@@ -74,6 +89,8 @@ export default function ShortenPage() {
         />
         <label htmlFor="alias">Custom alias (optional)</label>
         <input id="alias" type="text" value={alias} onChange={(e) => setAlias(e.target.value)} maxLength={32} />
+        <label htmlFor="expires">Expires at (optional)</label>
+        <input id="expires" type="datetime-local" value={expires} onChange={(e) => setExpires(e.target.value)} />
         <button type="submit" disabled={submitting}>
           {submitting ? 'Shortening…' : 'Shorten'}
         </button>
@@ -108,6 +125,9 @@ export default function ShortenPage() {
               <th scope="col">Short link</th>
               <th scope="col">Original URL</th>
               <th scope="col">Status</th>
+              <th scope="col">Clicks</th>
+              <th scope="col">Expires</th>
+              <th scope="col">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -118,11 +138,22 @@ export default function ShortenPage() {
                 </td>
                 <td className="url">{l.originalUrl}</td>
                 <td>{l.status}</td>
+                <td>{l.clicks}</td>
+                <td>{l.expiresAt ? new Date(l.expiresAt).toLocaleString() : '—'}</td>
+                <td>
+                  {l.status === 'ACTIVE' && (
+                    <button type="button" onClick={() => deactivate(l.code)} aria-label={`Deactivate ${l.code}`}>
+                      Deactivate
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
+
+      <AnalyticsPanel refreshKey={refreshKey} />
     </section>
   )
 }
