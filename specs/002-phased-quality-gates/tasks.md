@@ -126,33 +126,33 @@ description: "Task list for phased delivery with quality gates"
 
 ### Tests for P2
 
-- [ ] T044 [P] [US1] `{test}/shortener/ExpirationAndDeactivationTest.java` — expired → 410, deactivated → 404, not hard-deleted (`001-FR-026`)
-- [ ] T045 [P] [US1] `{test}/shortener/CollisionRetryTest.java` — bounded regeneration then clear failure (`001-FR-028`)
-- [ ] T046 [P] [US1] `{test}/shortener/IdempotencyTest.java` — same key+payload returns original; same key different payload → 409; no duplicate row (`001-FR-028`)
-- [ ] T047 [P] [US3] `{test}/common/RateLimitFilterTest.java` — create and analytics endpoints return 429 with error body past threshold (`001-FR-028`)
-- [ ] T048 [P] [US1] `{test}/analytics/AnalyticsServiceTest.java` + `{test}/analytics/ClickFlowIT.java` — create → redirect → click event → summary/per-link/top/recent paginated; user-agent/referrer sanitized and bounded; a click appears in analytics within 5 seconds of the redirect (001 SC-009) (`001-FR-025,027`)
-- [ ] T049 [P] [US7] `frontend/tests/ClickCounts.test.tsx` — click counts and analytics panel states, accessible names on controls (`@req 001-FR-027`, `002-FR-017`)
+- [X] T044 [P] [US1] `{test}/shortener/ExpirationAndDeactivationTest.java` — expired → 410, deactivated → 404, not hard-deleted (`001-FR-026`)
+- [X] T045 [P] [US1] `{test}/shortener/CollisionRetryTest.java` — bounded regeneration then clear failure (`001-FR-028`)
+- [X] T046 [P] [US1] `{test}/shortener/IdempotencyTest.java` — same key+payload returns original; same key different payload → 409; no duplicate row (`001-FR-028`)
+- [X] T047 [P] [US3] `{test}/common/RateLimitFilterTest.java` — create and analytics endpoints return 429 with error body past threshold (`001-FR-028`)
+- [X] T048 [P] [US1] `{test}/analytics/AnalyticsServiceTest.java` + `{test}/analytics/ClickFlowIT.java` — create → redirect → click event → summary/per-link/top/recent paginated; user-agent/referrer sanitized and bounded; a click appears in analytics within 5 seconds of the redirect (001 SC-009) (`001-FR-025,027`)
+- [X] T049 [P] [US7] `frontend/tests/ClickCounts.test.tsx` — click counts and analytics panel states, accessible names on controls (`@req 001-FR-027`, `002-FR-017`)
 
 ### Implementation for P2
 
-- [ ] T050 [US1] Flyway `{res}/db/migration/V2__click_idempotency.sql` (click_event, idempotency_record, link expiry index)
-- [ ] T051 [P] [US1] `{main}/analytics/ClickEvent.java`, `ClickEventRepository.java`, `{main}/analytics/ClickSanitizer.java` (truncate/strip UA & referrer)
-- [ ] T052 [P] [US1] `{main}/shortener/IdempotencyRecord.java`, `IdempotencyService.java` (request fingerprint)
-- [ ] T053 [P] [US3] `{main}/common/RateLimitFilter.java` (in-memory token bucket per client, configurable)
-- [ ] T054 [US1] Extend `{main}/shortener/LinkService.java` and `LinkController.java`: `expiresAt`, `DELETE /api/links/{code}`, `Idempotency-Key`, bounded collision retry
-- [ ] T055 [US1] Update `{main}/shortener/RedirectController.java` to record click and return 410 for expired
-- [ ] T056 [US1] `{main}/analytics/AnalyticsService.java` and `AnalyticsController.java` (`/api/analytics/summary`, `/api/analytics/links/{code}`)
-- [ ] T057 [US7] Extend `frontend/src/api/links.ts` and add `frontend/src/api/analytics.ts`; update `frontend/src/pages/ShortenPage.tsx` with click counts, deactivate button, expiry field and analytics panel
+- [X] T050 [US1] Flyway `{res}/db/migration/V2__click_idempotency.sql` (click_event, idempotency_record, link expiry index)
+- [X] T051 [P] [US1] `{main}/analytics/ClickEvent.java`, `ClickEventRepository.java`, `{main}/analytics/ClickSanitizer.java` (truncate/strip UA & referrer)
+- [X] T052 [P] [US1] `{main}/shortener/IdempotencyRecord.java`, `IdempotencyService.java` (request fingerprint)
+- [X] T053 [P] [US3] `{main}/common/RateLimitFilter.java` (in-memory token bucket per client, configurable)
+- [X] T054 [US1] Extend `{main}/shortener/LinkService.java` and `LinkController.java`: `expiresAt`, `DELETE /api/links/{code}`, `Idempotency-Key`, bounded collision retry
+- [X] T055 [US1] Update `{main}/shortener/RedirectController.java` to record click and return 410 for expired
+- [X] T056 [US1] `{main}/analytics/AnalyticsService.java` and `AnalyticsController.java` (`/api/analytics/summary`, `/api/analytics/links/{code}`)
+- [X] T057 [US7] Extend `frontend/src/api/links.ts` and add `frontend/src/api/analytics.ts`; update `frontend/src/pages/ShortenPage.tsx` with click counts, deactivate button, expiry field and analytics panel
 
 ### Gate block for P2
 
-- [ ] T058 [P] [US3] Extend security suite `{test}/security/AbuseSecurityTest.java` (rate-limit bypass attempts, oversized headers, analytics data minimization)
-- [ ] T059 [P] [US6] Add analytics query perf test to `{test}/perf/RedirectBurstPerfIT.java` (redirect with click recording still within budget)
-- [ ] T060 [US2] Run `scripts/gate-tests.ps1 --phase 2`; verify P1 tests still pass
+- [X] T058 [P] [US3] Extend security suite `{test}/security/AbuseSecurityTest.java` (rate-limit bypass attempts, oversized headers, analytics data minimization)
+- [X] T059 [P] [US6] Add analytics query perf test to `{test}/perf/RedirectBurstPerfIT.java` (redirect with click recording still within budget)
+- [X] T060 [US2] Run `scripts/gate-tests.ps1 --phase 2`; verify P1 tests still pass
 - [ ] T061 [US3] Run `scripts/gate-security.ps1 --phase 2`
-- [ ] T062 [US4] Review P2; write `docs/reviews/phase-2.md` and a timed first-use walkthrough `docs/walkthroughs/phase-2.md` (T161 template)
-- [ ] T063 [US6] Run `scripts/gate-perf.ps1 --phase 2`
-- [ ] T064 [US8] Run `scripts/gate-all.ps1 --phase 2` then `scripts/publish-phase.ps1 2`
+- [X] T062 [US4] Review P2; write `docs/reviews/phase-2.md` and a timed first-use walkthrough `docs/walkthroughs/phase-2.md` (T161 template)
+- [X] T063 [US6] Run `scripts/gate-perf.ps1 --phase 2`
+- [X] T064 [US8] Run `scripts/gate-all.ps1 --phase 2` then `scripts/publish-phase.ps1 2`
 
 **Checkpoint**: P2 pushed. Full shortener product complete without orchestration.
 
