@@ -1,0 +1,158 @@
+{
+  "scenario": "AMBIGUOUS",
+  "cases": [
+    {
+      "name": "requirements_analysis_ambiguous",
+      "input": {
+        "stageId": "REQUIREMENTS_ANALYSIS",
+        "scenario": "AMBIGUOUS",
+        "rawRequirement": "Make URL links safer and improve analytics.",
+        "normalizedRequirement": null,
+        "upstreamOutputs": {},
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "RequirementsAnalyst",
+        "status": "NEEDS_CLARIFICATION",
+        "summary": "[SIMULATED] The request is ambiguous; analysis lists open questions and explicit assumptions instead of guessing.",
+        "structuredOutput": {
+          "normalizedRequirement": "Improve the safety of shortened URLs and the quality of link analytics; both terms are underspecified.",
+          "goals": [
+            "Reduce the chance that short links lead to harmful destinations",
+            "Improve the usefulness of link analytics"
+          ],
+          "constraints": [
+            "Existing create and redirect API stays compatible"
+          ],
+          "classifiedRisks": [
+            {
+              "risk": "Scope creep because safer is undefined",
+              "class": "SCOPE"
+            },
+            {
+              "risk": "Collecting personal data for analytics",
+              "class": "PRIVACY"
+            },
+            {
+              "risk": "Blocking legitimate URLs with over-strict checks",
+              "class": "CORRECTNESS"
+            }
+          ]
+        },
+        "assumptions": [
+          "Safer means rejecting non-http(s) schemes and known malicious hosts at creation time",
+          "Analytics means click totals and a daily time series without personal data",
+          "Existing short codes remain valid"
+        ],
+        "risks": [
+          "Scope creep because safer is undefined",
+          "Privacy exposure from analytics",
+          "False positives blocking legitimate URLs"
+        ],
+        "openQuestions": [
+          "What does safer mean: blocking malicious destinations, preventing enumeration of codes, or both?",
+          "Which analytics are wanted: totals, referrers, time series or geography?",
+          "Is collecting visitor IP addresses or other personal data acceptable?",
+          "Should unsafe links be rejected at creation or flagged at redirect time?"
+        ],
+        "recommendedNextActions": [
+          "Answer the open questions before design",
+          "Otherwise proceed with the stated safe assumptions"
+        ],
+        "confidence": 0.55,
+        "confidenceNote": "Low confidence because key terms are undefined.",
+        "referencesToInputs": [],
+        "simulated": true
+      },
+      "expectPass": true
+    },
+    {
+      "name": "task_decomposition_with_safe_assumptions",
+      "input": {
+        "stageId": "TASK_DECOMPOSITION",
+        "scenario": "AMBIGUOUS",
+        "rawRequirement": "Make URL links safer and improve analytics.",
+        "normalizedRequirement": "Improve the safety of shortened URLs and the quality of link analytics; both terms are underspecified.",
+        "upstreamOutputs": {
+          "REQUIREMENTS_ANALYSIS": {
+            "normalizedRequirement": "Improve the safety of shortened URLs and the quality of link analytics; both terms are underspecified.",
+            "goals": [
+              "Reduce the chance that short links lead to harmful destinations",
+              "Improve the usefulness of link analytics"
+            ],
+            "constraints": [
+              "Existing create and redirect API stays compatible"
+            ],
+            "classifiedRisks": [
+              {
+                "risk": "Scope creep because safer is undefined",
+                "class": "SCOPE"
+              },
+              {
+                "risk": "Collecting personal data for analytics",
+                "class": "PRIVACY"
+              },
+              {
+                "risk": "Blocking legitimate URLs with over-strict checks",
+                "class": "CORRECTNESS"
+              }
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "TaskDecomposer",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Decomposed only the safe-assumption scope: scheme and host validation plus a privacy-free daily click series.",
+        "structuredOutput": {
+          "tasks": [
+            {
+              "id": "T1",
+              "title": "Reject non-http(s) schemes and hosts on a blocklist at creation",
+              "dependsOn": []
+            },
+            {
+              "id": "T2",
+              "title": "Add a daily click time series without personal data",
+              "dependsOn": []
+            },
+            {
+              "id": "T3",
+              "title": "Revisit scope once the open questions are answered",
+              "dependsOn": [
+                "T1",
+                "T2"
+              ]
+            }
+          ]
+        },
+        "assumptions": [
+          "Safe assumptions from requirements analysis hold"
+        ],
+        "risks": [
+          "Assumptions may differ from what the stakeholder meant"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Confirm the assumptions with the stakeholder"
+        ],
+        "confidence": 0.7,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "REQUIREMENTS_ANALYSIS:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": true
+    }
+  ]
+}
