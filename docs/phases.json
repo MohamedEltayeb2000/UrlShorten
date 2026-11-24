@@ -4,8 +4,8 @@
                    {
                        "id":  "P1",
                        "name":  "Shortener core",
-                       "status":  "BLOCKED",
-                       "publish":  null,
+                       "status":  "COMPLETE",
+                       "publish":  "PUBLISHED",
                        "capabilities":  [
                                             "Create short link",
                                             "Redirect",
