@@ -166,31 +166,31 @@ description: "Task list for phased delivery with quality gates"
 
 ### Tests for P3
 
-- [ ] T065 [P] [US1] `{test}/orchestrator/GraphValidatorTest.java` — cycle, missing dependency, duplicate ID rejected (`001-FR-002`)
-- [ ] T066 [P] [US1] `{test}/orchestrator/NodeStateMachineTest.java` — legal/illegal transitions, history stored (`001-FR-003`)
-- [ ] T067 [P] [US1] `{test}/orchestrator/SchedulerTest.java` — readiness only when all prerequisites succeeded; concurrency limit honored (`001-FR-004`)
-- [ ] T068 [US1] `{test}/orchestrator/RunExecutionIT.java` — parallel independent nodes, join waits, pause prevents new scheduling, restart recovery without duplicate execution (`001-FR-001,004,006,007`)
-- [ ] T069 [P] [US6] `{test}/perf/ParallelSpeedupPerfTest.java` (`@Tag("perf")`) — concurrent total < 0.7 × sequential for two delayed stages (`002-FR-015`)
-- [ ] T070 [P] [US7] `frontend/tests/RunsPage.test.tsx` — launcher, polling updates, distinct stage status labels as text (not color only) (`@req 001-FR-021`, `002-FR-016,017`)
+- [X] T065 [P] [US1] `{test}/orchestrator/GraphValidatorTest.java` — cycle, missing dependency, duplicate ID rejected (`001-FR-002`)
+- [X] T066 [P] [US1] `{test}/orchestrator/NodeStateMachineTest.java` — legal/illegal transitions, history stored (`001-FR-003`)
+- [X] T067 [P] [US1] `{test}/orchestrator/SchedulerTest.java` — readiness only when all prerequisites succeeded; concurrency limit honored (`001-FR-004`)
+- [X] T068 [US1] `{test}/orchestrator/RunExecutionIT.java` — parallel independent nodes, join waits, pause prevents new scheduling, restart recovery without duplicate execution (`001-FR-001,004,006,007`)
+- [X] T069 [P] [US6] `{test}/perf/ParallelSpeedupPerfTest.java` (`@Tag("perf")`) — concurrent total < 0.7 × sequential for two delayed stages (`002-FR-015`)
+- [X] T070 [P] [US7] `frontend/tests/RunsPage.test.tsx` — launcher, polling updates, distinct stage status labels as text (not color only) (`@req 001-FR-021`, `002-FR-016,017`)
 
 ### Implementation for P3
 
-- [ ] T071 [US1] Flyway `{res}/db/migration/V3__orchestration.sql` (agent_run, workflow_node_definition, run_node, node_transition)
-- [ ] T072 [P] [US1] Entities/repositories in `{main}/orchestrator/` (`AgentRun`, `RunNode`, `NodeTransition`, `NodeStatus` enum)
-- [ ] T073 [P] [US1] `{main}/orchestrator/WorkflowDefinition.java` + default 8-stage graph `{main}/orchestrator/DefaultWorkflow.java` (per root plan.md §6) and `GraphValidator.java`
-- [ ] T074 [US1] `{main}/orchestrator/NodeStateMachine.java` (transition table, history append)
-- [ ] T075 [US1] `{main}/orchestrator/StageHandler.java` interface and `{main}/orchestrator/NoOpStageHandler.java` (configurable delay, for tests)
-- [ ] T076 [US1] `{main}/orchestrator/Scheduler.java` (ready-set calc, bounded `ThreadPoolTaskExecutor`, persist state before/after execution, attempt IDs)
-- [ ] T077 [US1] `{main}/orchestrator/RunService.java` (create/start/pause/resume, startup recovery of interrupted RUNNING nodes) and `RunController.java` (`POST/GET /api/agent-runs`, `/start`, `/pause`)
-- [ ] T078 [US7] `frontend/src/api/runs.ts`, `frontend/src/hooks/usePolling.ts` (2 s), `frontend/src/pages/RunsPage.tsx` (requirement input, scenario select, start/pause, stage list grouped by dependency level with status labels)
+- [X] T071 [US1] Flyway `{res}/db/migration/V3__orchestration.sql` (agent_run, workflow_node_definition, run_node, node_transition)
+- [X] T072 [P] [US1] Entities/repositories in `{main}/orchestrator/` (`AgentRun`, `RunNode`, `NodeTransition`, `NodeStatus` enum)
+- [X] T073 [P] [US1] `{main}/orchestrator/WorkflowDefinition.java` + default 8-stage graph `{main}/orchestrator/DefaultWorkflow.java` (per root plan.md §6) and `GraphValidator.java`
+- [X] T074 [US1] `{main}/orchestrator/NodeStateMachine.java` (transition table, history append)
+- [X] T075 [US1] `{main}/orchestrator/StageHandler.java` interface and `{main}/orchestrator/NoOpStageHandler.java` (configurable delay, for tests)
+- [X] T076 [US1] `{main}/orchestrator/Scheduler.java` (ready-set calc, bounded `ThreadPoolTaskExecutor`, persist state before/after execution, attempt IDs)
+- [X] T077 [US1] `{main}/orchestrator/RunService.java` (create/start/pause/resume, startup recovery of interrupted RUNNING nodes) and `RunController.java` (`POST/GET /api/agent-runs`, `/start`, `/pause`)
+- [X] T078 [US7] `frontend/src/api/runs.ts`, `frontend/src/hooks/usePolling.ts` (2 s), `frontend/src/pages/RunsPage.tsx` (requirement input, scenario select, start/pause, stage list grouped by dependency level with status labels)
 
 ### Gate block for P3
 
-- [ ] T079 [P] [US3] `{test}/security/RunSecurityTest.java` (`@Tag("security")`): oversized/malicious requirement text rejected or sanitized; no stage handler can execute shell/code
-- [ ] T080 [US2] Run `scripts/gate-tests.ps1 --phase 3`
+- [X] T079 [P] [US3] `{test}/security/RunSecurityTest.java` (`@Tag("security")`): oversized/malicious requirement text rejected or sanitized; no stage handler can execute shell/code
+- [X] T080 [US2] Run `scripts/gate-tests.ps1 --phase 3`
 - [ ] T081 [US3] Run `scripts/gate-security.ps1 --phase 3`
-- [ ] T082 [US4] Review P3; write `docs/reviews/phase-3.md` and a timed first-use walkthrough `docs/walkthroughs/phase-3.md` (T161 template)
-- [ ] T083 [US6] Run `scripts/gate-perf.ps1 --phase 3`
+- [X] T082 [US4] Review P3; write `docs/reviews/phase-3.md` and a timed first-use walkthrough `docs/walkthroughs/phase-3.md` (T161 template)
+- [X] T083 [US6] Run `scripts/gate-perf.ps1 --phase 3`
 - [ ] T084 [US8] Run `scripts/gate-all.ps1 --phase 3` then `scripts/publish-phase.ps1 3`
 
 **Checkpoint**: P3 pushed. Real graph execution, still with no-op stages.
