@@ -51,8 +51,8 @@ Updated 2026-11-24. Gate columns: Tests / Security / Review / Performance / Eval
 |-------|-------|--------|---------------------------|-------|
 | P1 | Shortener core: create, redirect, validation, simple UI | Published (tag `phase-1`) | PASS / WAIVED / PASS / PASS / - | 48 backend, 9 frontend |
 | P2 | Expiry, deactivation, click analytics, idempotency, rate limiting | Published (tag `phase-2`) | PASS / PASS (Spring Framework CVEs suppressed, owner waiver) / PASS / PASS / - | 79 backend, 14 frontend |
-| P3 | Orchestration core (graph, scheduler, parallel + join) | Built and tested; publishing | pending | 129 backend, 26 frontend |
-| P4 | Agents, artifacts, audit, AI evaluation | Planned | - | - |
+| P3 | Orchestration core (graph, scheduler, parallel + join) | Published (tag `phase-3`) | PASS / PASS / PASS / PASS / - | 129 backend, 26 frontend |
+| P4 | Agents, artifacts, audit, AI evaluation | Built and tested; publishing | pending | 179 backend, 35 frontend |
 | P5 | Policy, approvals, retry/fallback, rollback, re-plan | Planned | - | - |
 | P6 | Scenarios, metrics, summary, docs | Planned | - | - |
 
