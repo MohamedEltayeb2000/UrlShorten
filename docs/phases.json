@@ -44,7 +44,7 @@
                    {
                        "id":  "P2",
                        "name":  "Hardening and analytics",
-                       "status":  "NOT_STARTED",
+                       "status":  "COMPLETE",
                        "publish":  null,
                        "capabilities":  [
                                             "Expiry",
