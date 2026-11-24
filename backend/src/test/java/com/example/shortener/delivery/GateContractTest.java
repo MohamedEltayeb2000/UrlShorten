@@ -92,7 +92,8 @@ class GateContractTest {
     void recordedGateResultsFollowTheContractShape() throws Exception {
         try (var files = Files.list(RepoFiles.file("docs/gates"))) {
             for (var f : (Iterable<java.nio.file.Path>) files.filter(x -> x.getFileName().toString().matches("phase-\\d+\\.json"))::iterator) {
-                JsonNode n = new ObjectMapper().readTree(Files.readString(f));
+                // Windows PowerShell writes a UTF-8 BOM; strip it before parsing.
+                JsonNode n = new ObjectMapper().readTree(Files.readString(f).replace("﻿", ""));
                 assertTrue(n.has("phase"));
                 n.get("gates").fields().forEachRemaining(e -> {
                     assertTrue(List.of("TESTS", "SECURITY", "REVIEW", "PERF", "EVAL").contains(e.getKey()));
