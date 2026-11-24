@@ -16,11 +16,23 @@ describe('page render budget', () => {
       shortUrl: `http://localhost:8080/code${i}`,
       originalUrl: `https://example.com/${i}`,
       status: 'ACTIVE',
+      clicks: i,
       createdAt: new Date().toISOString(),
     }))
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ items, page: 0, size: 100, totalItems: 100, totalPages: 1 }), { status: 200 })),
+      vi.fn(async (input: RequestInfo | URL) => {
+        const body = String(input).includes('/api/analytics')
+          ? {
+              totalLinks: 100,
+              totalClicks: 4950,
+              clicksOverTime: [],
+              topLinks: [{ code: 'code99x', clicks: 99 }],
+              recentEvents: { items: [], page: 0, size: 5, totalItems: 0, totalPages: 0 },
+            }
+          : { items, page: 0, size: 100, totalItems: 100, totalPages: 1 }
+        return new Response(JSON.stringify(body), { status: 200 })
+      }),
     )
     const t0 = performance.now()
     render(

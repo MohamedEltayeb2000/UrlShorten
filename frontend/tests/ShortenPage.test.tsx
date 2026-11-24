@@ -7,7 +7,19 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ShortenPage from '../src/pages/ShortenPage'
 
-function mockFetch(handlers: Record<string, () => Response | Promise<Response>>) {
+const emptySummary = {
+  totalLinks: 0,
+  totalClicks: 0,
+  clicksOverTime: [],
+  topLinks: [],
+  recentEvents: { items: [], page: 0, size: 5, totalItems: 0, totalPages: 0 },
+}
+
+function mockFetch(overrides: Record<string, () => Response | Promise<Response>>) {
+  const handlers: Record<string, () => Response | Promise<Response>> = {
+    'GET /api/analytics/summary': () => new Response(JSON.stringify(emptySummary), { status: 200 }),
+    ...overrides,
+  }
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -59,6 +71,7 @@ describe('ShortenPage', () => {
       originalUrl: 'https://example.com',
       status: 'ACTIVE',
       createdAt: new Date().toISOString(),
+      clicks: 0,
     }
     mockFetch({
       'GET /api/links': () => json(emptyPage),
