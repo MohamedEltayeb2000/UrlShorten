@@ -45,9 +45,27 @@ $name = (Get-Content (Join-Path $root 'docs/phases.json') -Raw | ConvertFrom-Jso
 # Secret scan of everything about to be committed
 $scan = Invoke-SecretScan -Path $root -ConfigPath (Join-Path $root '.gitleaks.toml')
 if (-not $scan.ran -or $scan.leaks -gt 0) { Pop-Location; Stop-Publish "secret scan did not pass: $($scan.output)" }
+# Several focused commits per phase instead of one big commit (owner request).
+$trailer = 'Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>'
+$groups = @(
+    @{ paths = @('backend');                         label = 'backend code and tests' },
+    @{ paths = @('frontend');                        label = 'frontend code and tests' },
+    @{ paths = @('scripts', 'eval', 'fixtures');     label = 'gate scripts, evaluation sets and fixtures' },
+    @{ paths = @('specs', '.specify', '.claude');    label = 'specs and task status' },
+    @{ paths = @('docs');                            label = 'gate evidence (traceability, reviews, walkthroughs, performance)' }
+)
+foreach ($g in $groups) {
+    $existing = @($g.paths | Where-Object { Test-Path (Join-Path $root $_) })
+    if ($existing.Count -eq 0) { continue }
+    & git add -- @existing 2>$null
+    & git diff --cached --quiet
+    if ($LASTEXITCODE -ne 0) {
+        & git commit -q -m "phase-${Phase}: $($g.label)" -m "$($name.name) - all gates passed." -m $trailer 2>&1 | Out-Host
+    }
+}
 & git add -A
-$msg = "phase-${Phase}: $($name.name)`n`nAll gates passed (tests, security, review, performance, evaluation).`n`nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
-& git commit -m $msg 2>&1 | Out-Host
+& git diff --cached --quiet
+if ($LASTEXITCODE -ne 0) { & git commit -q -m "phase-${Phase}: remaining project files" -m $trailer 2>&1 | Out-Host }
 & git tag -f "phase-$Phase" 2>&1 | Out-Host
 $commit = (& git rev-parse --short HEAD)
 $branch = (& git rev-parse --abbrev-ref HEAD)
