@@ -45,7 +45,7 @@
                        "id":  "P2",
                        "name":  "Hardening and analytics",
                        "status":  "COMPLETE",
-                       "publish":  null,
+                       "publish":  "PUBLISHED",
                        "capabilities":  [
                                             "Expiry",
                                             "Deactivate",
