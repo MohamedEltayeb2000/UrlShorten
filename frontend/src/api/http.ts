@@ -13,7 +13,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     res = await fetch(path, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+      headers: { 'Content-Type': 'application/json', ...((init?.headers as Record<string, string>) ?? {}) },
     })
   } catch {
     throw new ApiError(0, 'NETWORK_ERROR', 'Cannot reach the server. Is the backend running?')
