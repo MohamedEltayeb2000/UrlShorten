@@ -67,6 +67,18 @@ class RedirectBurstPerfIT {
         Collections.sort(latencies);
         long p95 = latencies.get((int) Math.ceil(latencies.size() * 0.95) - 1);
 
+        // The analytics summary must stay fast with the clicks just recorded, and every redirect must have been counted.
+        long a0 = System.nanoTime();
+        HttpResponse<String> summary = client.send(HttpRequest.newBuilder(URI.create(base + "/api/analytics/summary")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        long summaryMs = (System.nanoTime() - a0) / 1_000_000;
+        long summaryBudget = budgets.get("analytics_summary_ms").asLong();
+        assertEquals(200, summary.statusCode());
+        assertTrue(new ObjectMapper().readTree(summary.body()).get("totalClicks").asLong() >= requests,
+                "every redirect must have recorded a click");
+        RepoFiles.recordPerf("analytics summary ms (after " + requests + " clicks)", summaryBudget, summaryMs, summaryMs <= summaryBudget);
+        assertTrue(summaryMs <= summaryBudget, "analytics summary " + summaryMs + " ms exceeds " + summaryBudget + " ms");
+
         boolean ok = p95 <= p95Budget && errors == 0;
         RepoFiles.recordPerf("redirect p95 ms (" + requests + " requests, 16 threads)", p95Budget, p95, p95 <= p95Budget);
         RepoFiles.recordPerf("redirect errors", budgets.get("redirect_errors").asInt(), errors, errors == 0);
