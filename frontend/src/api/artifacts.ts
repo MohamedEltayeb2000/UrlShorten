@@ -1,0 +1,34 @@
+import { http } from './http'
+import type { Page } from './links'
+
+export type ArtifactStatus = 'CURRENT' | 'STALE' | 'SUPERSEDED'
+
+export interface ArtifactView {
+  id: number
+  nodeId: string
+  type: string
+  version: number
+  status: ArtifactStatus
+  checksum: string
+  parentIds: number[]
+  inputRefs: string[]
+  createdBy: string
+  createdAt: string
+  content: string
+}
+
+export interface AuditEventView {
+  id: number
+  actorType: string
+  actorId: string
+  eventType: string
+  occurredAt: string
+  details?: string
+  correlationId?: string
+}
+
+export const listArtifacts = (runId: string) =>
+  http<ArtifactView[]>(`/api/agent-runs/${encodeURIComponent(runId)}/artifacts`)
+
+export const listEvents = (runId: string, page = 0, size = 10) =>
+  http<Page<AuditEventView>>(`/api/agent-runs/${encodeURIComponent(runId)}/events?page=${page}&size=${size}`)
