@@ -29,7 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 @Tag("perf")
 @Requirement("002-FR-015")
 class ParallelSpeedupPerfTest {
-    static final long STAGE_MS = 200;
+    static final long STAGE_MS = 400; // long enough that fixed scheduling overhead does not dominate
 
     @TestConfiguration
     static class Cfg {
@@ -44,6 +44,7 @@ class ParallelSpeedupPerfTest {
 
     @Autowired RunService service;
     @Autowired Workflows workflows;
+    @Autowired RecordingStageHandler handler;
 
     @Test
     void fanOutOfFourStagesIsFasterThanRunningThemSequentially() throws Exception {
@@ -56,6 +57,13 @@ class ParallelSpeedupPerfTest {
 
         long sequentialMs = nodes.size() * STAGE_MS; // the same stages one after another
         double ratioBudget = new ObjectMapper().readTree(RepoFiles.read("docs/perf/budgets.json")).get("parallel_ratio_max").asDouble();
+
+        // Warm-up: the first run in a fresh JVM pays one-off JPA/JIT start-up costs that are not what this budget measures.
+        handler.setDefaultDelayMs(0);
+        long warm = service.create("Warm-up", null, "fanout-perf").id();
+        service.start(warm);
+        await(() -> terminal(service.detail(warm).status()), Duration.ofSeconds(30), "warm-up run to finish");
+        handler.setDefaultDelayMs(STAGE_MS);
 
         long id = service.create("Parallel speed-up", null, "fanout-perf").id();
         long t0 = System.nanoTime();
