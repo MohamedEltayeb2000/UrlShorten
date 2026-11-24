@@ -44,13 +44,20 @@ The first security run downloads the NVD vulnerability database and can take hou
 set `NVD_API_KEY` (free from nvd.nist.gov) to speed it up. Gitleaks is downloaded into `.tools/` (git-ignored).
 
 ## Phase status
-| Phase | Scope | Status |
-|-------|-------|--------|
-| P1 | Shortener core: create, redirect, validation, simple UI | in progress |
-| P2 | Expiry, analytics, idempotency, rate limiting | planned |
-| P3 | Orchestration core (graph, scheduler, parallel + join) | planned |
-| P4 | Agents, artifacts, audit, AI evaluation | planned |
-| P5 | Policy, approvals, retry/fallback, rollback, re-plan | planned |
-| P6 | Scenarios, metrics, summary, docs | planned |
+Updated 2026-11-24. Gate columns: Tests / Security / Review / Performance / Eval. `PASS`, `WAIVED` (owner-approved, recorded in
+`docs/reviews/phase-N.md`), `-` (not applicable or not run yet).
+
+| Phase | Scope | Status | Gates (T / S / R / P / E) | Tests |
+|-------|-------|--------|---------------------------|-------|
+| P1 | Shortener core: create, redirect, validation, simple UI | Published (tag `phase-1`) | PASS / WAIVED / PASS / PASS / - | 48 backend, 9 frontend |
+| P2 | Expiry, deactivation, click analytics, idempotency, rate limiting | Built and tested; publishing after the security re-scan | PASS / re-scan pending / PASS / PASS / - | 79 backend, 14 frontend |
+| P3 | Orchestration core (graph, scheduler, parallel + join) | Planned | - | - |
+| P4 | Agents, artifacts, audit, AI evaluation | Planned | - | - |
+| P5 | Policy, approvals, retry/fallback, rollback, re-plan | Planned | - | - |
+| P6 | Scenarios, metrics, summary, docs | Planned | - | - |
+
+Security note: the first full dependency scan (OWASP/NVD) completed after P1 was published and found high-severity CVEs in the
+original dependency versions (Spring Boot 3.5.6, Tomcat, PostgreSQL driver, Swagger UI). Spring Boot was upgraded to 3.5.16 and
+springdoc to 2.8.17 as part of P2, and the scan is being re-run on the upgraded set. See `docs/reviews/phase-1.md` and `phase-2.md`.
 
 Generated code and patches are proposals only; nothing is applied, executed or deployed automatically.
