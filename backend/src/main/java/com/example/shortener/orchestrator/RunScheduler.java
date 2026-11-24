@@ -1,5 +1,6 @@
 package com.example.shortener.orchestrator;
 
+import com.example.shortener.audit.AuditService;
 import com.example.shortener.common.ApiException;
 import jakarta.annotation.PreDestroy;
 import java.time.Instant;
@@ -36,17 +37,22 @@ public class RunScheduler {
     private final RunNodeRepository nodes;
     private final RunTransitions transitions;
     private final StageHandler handler;
+    private final StageAttemptRepository attempts;
+    private final AuditService audit;
     private final Semaphore permits;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final Map<Long, Object> locks = new ConcurrentHashMap<>();
     private final Set<Long> queued = ConcurrentHashMap.newKeySet();
 
     public RunScheduler(AgentRunRepository runs, RunNodeRepository nodes, RunTransitions transitions, StageHandler handler,
+                        StageAttemptRepository attempts, AuditService audit,
                         @Value("${shortener.orchestrator.max-parallel:4}") int maxParallel) {
         this.runs = runs;
         this.nodes = nodes;
         this.transitions = transitions;
         this.handler = handler;
+        this.attempts = attempts;
+        this.audit = audit;
         this.permits = new Semaphore(Math.max(1, maxParallel));
     }
 
@@ -78,6 +84,7 @@ public class RunScheduler {
             run.setStatus(RunStatus.RUNNING);
             if (run.getStartedAt() == null) run.setStartedAt(Instant.now());
             runs.save(run);
+            audit.append(runId, "SYSTEM", "scheduler", "RUN_STARTED", "run started or resumed", null);
             for (RunNode n : nodes.findByRunIdOrderById(runId)) {
                 if (n.getStatus() == NodeStatus.READY) submit(runId, n.getId());
             }
@@ -95,6 +102,7 @@ public class RunScheduler {
             }
             run.setStatus(RunStatus.PAUSED);
             runs.save(run);
+            audit.append(runId, "SYSTEM", "scheduler", "RUN_PAUSED", "safe-stop requested: no new stages will start", null);
         }
     }
 
@@ -149,6 +157,13 @@ public class RunScheduler {
             run.setStatus(failed ? RunStatus.FAILED : RunStatus.SUCCEEDED);
             run.setCompletedAt(Instant.now());
             runs.save(run);
+            audit.append(runId, "SYSTEM", "scheduler", "RUN_" + run.getStatus().name(), "all stages reached a terminal state", null);
+        } else if (after.stream().noneMatch(n -> n.getStatus() == NodeStatus.RUNNING || n.getStatus() == NodeStatus.READY
+                || n.getStatus() == NodeStatus.RETRYING)
+                && after.stream().anyMatch(n -> n.getStatus() == NodeStatus.WAITING_FOR_APPROVAL || n.getStatus() == NodeStatus.BLOCKED)) {
+            run.setStatus(RunStatus.WAITING_FOR_APPROVAL);
+            runs.save(run);
+            audit.append(runId, "SYSTEM", "scheduler", "RUN_WAITING_FOR_APPROVAL", "a human decision is required to continue", null);
         }
     }
 
@@ -174,12 +189,27 @@ public class RunScheduler {
                     attempt = started.getAttemptCount();
                 }
                 ran = true;
+                StageAttempt record = attempts.save(new StageAttempt(nodeDbId, attempt, "RUNNING", Instant.now()));
                 try {
                     handler.execute(new StageExecution(runId, nodeId, attempt,
                             () -> runs.findById(runId).map(r -> r.getStatus() != RunStatus.RUNNING).orElse(true)));
                     synchronized (lock(runId)) {
                         transitions.move(nodeDbId, NodeStatus.SUCCEEDED, "completed", n -> n.setCompletedAt(Instant.now()));
                     }
+                    finish(record, "SUCCEEDED", null);
+                } catch (AwaitingDecisionException e) {
+                    synchronized (lock(runId)) {
+                        transitions.move(nodeDbId, NodeStatus.WAITING_FOR_APPROVAL, "waiting for a human decision: " + e.getMessage(), null);
+                    }
+                    finish(record, "WAITING_FOR_APPROVAL", null);
+                } catch (HeldForReviewException e) {
+                    synchronized (lock(runId)) {
+                        transitions.move(nodeDbId, NodeStatus.BLOCKED, "output held for review", n -> {
+                            n.setErrorCode("HELD");
+                            n.setErrorSummary(summarize(e));
+                        });
+                    }
+                    finish(record, "HELD", summarize(e));
                 } catch (Exception e) {
                     synchronized (lock(runId)) {
                         transitions.move(nodeDbId, NodeStatus.FAILED, "failed: " + e.getClass().getSimpleName(), n -> {
@@ -188,6 +218,7 @@ public class RunScheduler {
                             n.setErrorSummary(summarize(e));
                         });
                     }
+                    finish(record, "FAILED", summarize(e));
                 }
             } finally {
                 permits.release();
@@ -204,6 +235,11 @@ public class RunScheduler {
                 scheduleLocked(runId);
             }
         }
+    }
+
+    private void finish(StageAttempt record, String status, String error) {
+        record.finish(status, Instant.now(), handler.providerName(), false, error);
+        attempts.save(record);
     }
 
     private AgentRun load(long runId) {

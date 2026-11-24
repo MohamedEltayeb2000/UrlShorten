@@ -6,4 +6,9 @@ package com.example.shortener.orchestrator;
  */
 public interface StageHandler {
     void execute(StageExecution execution) throws Exception;
+
+    /** Name recorded on each stage attempt (e.g. the agent provider); "none" when no provider is involved. */
+    default String providerName() {
+        return "none";
+    }
 }

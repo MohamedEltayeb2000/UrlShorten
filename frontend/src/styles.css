@@ -30,3 +30,16 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .status-failed, .status-cancelled { color: #b91c1c; }
 .status-waiting_for_approval, .status-paused, .status-blocked { color: #b45309; }
 .status-pending, .status-ready, .status-created, .status-skipped { color: #4b5563; }
+.artifact { border: 1px solid #e5e7eb; padding: 0.75rem; margin: 0.75rem 0; background: #fff; }
+.proposal-banner { background: #fef3c7; border: 2px solid #b45309; color: #78350f; padding: 0.5rem; font-weight: 700; }
+.provenance { display: grid; grid-template-columns: max-content 1fr; gap: 0.1rem 1rem; }
+.provenance dt { font-weight: 600; }
+.provenance dd { margin: 0; }
+.status { font-weight: 700; padding: 0 0.4rem; border: 1px solid currentColor; }
+.status-current { color: #047857; }
+.status-stale { color: #b45309; }
+.status-superseded { color: #4b5563; }
+pre.content, pre.diff { background: #f3f4f6; padding: 0.5rem; overflow-x: auto; white-space: pre-wrap; }
+.diff-add { background: #dcfce7; }
+.diff-del { background: #fee2e2; }
+.timeline { padding-left: 1.25rem; }

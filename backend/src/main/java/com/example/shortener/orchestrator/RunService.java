@@ -1,5 +1,6 @@
 package com.example.shortener.orchestrator;
 
+import com.example.shortener.audit.AuditService;
 import com.example.shortener.common.ApiException;
 import com.example.shortener.shortener.dto.PageResponse;
 import java.util.List;
@@ -21,14 +22,16 @@ public class RunService {
     private final RunTransitions transitions;
     private final RunScheduler scheduler;
     private final Workflows workflows;
+    private final AuditService audit;
 
     public RunService(AgentRunRepository runs, RunNodeRepository nodes, RunTransitions transitions, RunScheduler scheduler,
-                      Workflows workflows) {
+                      Workflows workflows, AuditService audit) {
         this.runs = runs;
         this.nodes = nodes;
         this.transitions = transitions;
         this.scheduler = scheduler;
         this.workflows = workflows;
+        this.audit = audit;
     }
 
     public RunDtos.RunDetail create(String requirement, String scenario) {
@@ -47,6 +50,7 @@ public class RunService {
             RunNode n = nodes.save(new RunNode(run.getId(), d.id(), d.name(), d.dependsOn(), d.requiresApproval()));
             transitions.recordInitial(n);
         }
+        audit.append(run.getId(), "HUMAN", "demo-user", "RUN_CREATED", "workflow " + def.name() + (sc == null ? "" : ", scenario " + sc), null);
         return detail(run.getId());
     }
 
