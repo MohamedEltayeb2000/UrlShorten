@@ -1,0 +1,1103 @@
+{
+  "scenario": "DEGRADED",
+  "cases": [
+    {
+      "name": "missing_required_stage_key",
+      "input": {
+        "stageId": "ARCHITECTURE_DESIGN",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "TASK_DECOMPOSITION": {
+            "tasks": [
+              {
+                "id": "T1",
+                "title": "Validate and normalise submitted URLs",
+                "dependsOn": []
+              },
+              {
+                "id": "T2",
+                "title": "Generate unique base62 short codes and store links",
+                "dependsOn": [
+                  "T1"
+                ]
+              },
+              {
+                "id": "T3",
+                "title": "Serve the redirect endpoint",
+                "dependsOn": [
+                  "T2"
+                ]
+              },
+              {
+                "id": "T4",
+                "title": "Count clicks per short link",
+                "dependsOn": [
+                  "T3"
+                ]
+              }
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ArchitectureDesigner",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Proposed a layered design with a controller, a service and a repository.",
+        "structuredOutput": {
+          "components": [
+            "LinkController",
+            "LinkService",
+            "LinkRepository",
+            "ClickCounter"
+          ],
+          "decisions": [
+            "Use 7-character base62 codes drawn from a secure random source",
+            "Store links in the relational database with a unique index on the code",
+            "Count clicks asynchronously so redirects stay fast"
+          ]
+        },
+        "assumptions": [
+          "A single relational database is sufficient"
+        ],
+        "risks": [
+          "Unique index contention under heavy create load"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Approve the layering before planning"
+        ],
+        "confidence": 0.86,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "TASK_DECOMPOSITION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "stage_complete"
+      ]
+    },
+    {
+      "name": "confidence_out_of_range",
+      "input": {
+        "stageId": "TESTING",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "IMPLEMENTATION": {
+            "proposal": "Add LinkService.create(url) that validates the scheme, generates a 7-character base62 code and saves it, plus a redirect handler that looks the code up and answers 302.",
+            "applied": false
+          },
+          "IMPLEMENTATION_PLAN": {
+            "steps": [
+              "Add the Link entity and repository with a unique code index",
+              "Implement LinkService.create with URL validation and code generation",
+              "Expose POST /api/links returning the short code",
+              "Expose GET /{code} returning a 302 redirect",
+              "Record each redirect in ClickCounter"
+            ],
+            "filesToChange": [
+              "src/main/java/com/example/shortener/LinkService.java",
+              "src/main/java/com/example/shortener/LinkController.java",
+              "src/main/java/com/example/shortener/LinkRepository.java"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "TestPlanner",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Produced a test plan covering creation, redirect, validation and counting.",
+        "structuredOutput": {
+          "testPlan": [
+            "Unit test: URL validation rejects non-http schemes",
+            "Unit test: generated codes are 7 base62 characters",
+            "Integration test: POST then GET redirects to the original URL",
+            "Integration test: click count increments once per redirect"
+          ],
+          "expectedResults": [
+            "Invalid URLs return 400",
+            "Valid URLs return 201 with a code",
+            "Redirect returns 302 with the original Location",
+            "Click count equals the number of redirects"
+          ]
+        },
+        "assumptions": [
+          "An in-memory database is used for tests"
+        ],
+        "risks": [
+          "Asynchronous counting can make count assertions flaky"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Run the test plan once the proposal is applied"
+        ],
+        "confidence": 1.7,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "IMPLEMENTATION:v1",
+          "IMPLEMENTATION_PLAN:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "schema_valid"
+      ]
+    },
+    {
+      "name": "blank_summary",
+      "input": {
+        "stageId": "DOCUMENTATION",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "IMPLEMENTATION": {
+            "proposal": "Add LinkService.create(url) that validates the scheme, generates a 7-character base62 code and saves it, plus a redirect handler that looks the code up and answers 302.",
+            "applied": false
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "DocumentationWriter",
+        "status": "SUCCESS",
+        "summary": "   ",
+        "structuredOutput": {
+          "documents": [
+            "README usage section with create and redirect examples",
+            "API reference for POST /api/links and GET /{code}",
+            "Operations note on click counting behaviour"
+          ]
+        },
+        "assumptions": [
+          "Existing README structure is kept"
+        ],
+        "risks": [
+          "Docs may drift from the code if the API changes"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Publish docs together with the release"
+        ],
+        "confidence": 0.87,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "IMPLEMENTATION:v1"
+        ],
+        "simulated": false
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "schema_valid"
+      ]
+    },
+    {
+      "name": "secret_in_summary",
+      "input": {
+        "stageId": "TASK_DECOMPOSITION",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "REQUIREMENTS_ANALYSIS": {
+            "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+            "goals": [
+              "Create a short code for any valid http or https URL",
+              "Redirect a short code to its original URL with a 302 response",
+              "Expose a click count per short link"
+            ],
+            "constraints": [
+              "Only http and https URLs are accepted",
+              "Short codes are unique and URL-safe",
+              "Redirect latency stays under 50 ms at p95"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "TaskDecomposer",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Tasks split; deploy key ghp_abcdefghijklmnopqrstuvwxyz0123456789 was found in the notes.",
+        "structuredOutput": {
+          "tasks": [
+            {
+              "id": "T1",
+              "title": "Validate and normalise submitted URLs",
+              "dependsOn": []
+            },
+            {
+              "id": "T2",
+              "title": "Generate unique base62 short codes and store links",
+              "dependsOn": [
+                "T1"
+              ]
+            },
+            {
+              "id": "T3",
+              "title": "Serve the redirect endpoint",
+              "dependsOn": [
+                "T2"
+              ]
+            },
+            {
+              "id": "T4",
+              "title": "Count clicks per short link",
+              "dependsOn": [
+                "T3"
+              ]
+            }
+          ]
+        },
+        "assumptions": [
+          "One engineer works the tasks sequentially"
+        ],
+        "risks": [
+          "T4 may slow redirects if counting is synchronous"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Review the task order before planning"
+        ],
+        "confidence": 0.88,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "REQUIREMENTS_ANALYSIS:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "no_unsafe_content"
+      ]
+    },
+    {
+      "name": "unsafe_url_scheme_in_structured_field",
+      "input": {
+        "stageId": "DOCUMENTATION",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "IMPLEMENTATION": {
+            "proposal": "Add LinkService.create(url) that validates the scheme, generates a 7-character base62 code and saves it, plus a redirect handler that looks the code up and answers 302.",
+            "applied": false
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "DocumentationWriter",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Outlined documentation for the API, usage and operations.",
+        "structuredOutput": {
+          "documents": [
+            "README usage section",
+            "Link example: javascript:alert(document.cookie)"
+          ]
+        },
+        "assumptions": [
+          "Existing README structure is kept"
+        ],
+        "risks": [
+          "Docs may drift from the code if the API changes"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Publish docs together with the release"
+        ],
+        "confidence": 0.87,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "IMPLEMENTATION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "no_unsafe_content"
+      ]
+    },
+    {
+      "name": "destructive_command_in_step",
+      "input": {
+        "stageId": "IMPLEMENTATION_PLAN",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "ARCHITECTURE_DESIGN": {
+            "components": [
+              "LinkController",
+              "LinkService",
+              "LinkRepository",
+              "ClickCounter"
+            ],
+            "decisions": [
+              "Use 7-character base62 codes drawn from a secure random source",
+              "Store links in the relational database with a unique index on the code",
+              "Count clicks asynchronously so redirects stay fast"
+            ],
+            "dataFlow": [
+              "Client -> LinkController -> LinkService -> LinkRepository",
+              "Redirect request -> LinkService lookup -> ClickCounter -> 302 response"
+            ]
+          },
+          "TASK_DECOMPOSITION": {
+            "tasks": [
+              {
+                "id": "T1",
+                "title": "Validate and normalise submitted URLs",
+                "dependsOn": []
+              },
+              {
+                "id": "T2",
+                "title": "Generate unique base62 short codes and store links",
+                "dependsOn": [
+                  "T1"
+                ]
+              },
+              {
+                "id": "T3",
+                "title": "Serve the redirect endpoint",
+                "dependsOn": [
+                  "T2"
+                ]
+              },
+              {
+                "id": "T4",
+                "title": "Count clicks per short link",
+                "dependsOn": [
+                  "T3"
+                ]
+              }
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ImplementationPlanner",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Planned five implementation steps touching the controller, service and repository.",
+        "structuredOutput": {
+          "steps": [
+            "Clean the build output with rm -rf target/ and the data directory",
+            "Add the Link entity"
+          ],
+          "filesToChange": [
+            "src/main/java/com/example/shortener/LinkService.java",
+            "src/main/java/com/example/shortener/LinkController.java",
+            "src/main/java/com/example/shortener/LinkRepository.java"
+          ]
+        },
+        "assumptions": [
+          "Existing database migrations can be extended"
+        ],
+        "risks": [
+          "Plan touches three core classes at once"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Review the plan before any implementation is proposed"
+        ],
+        "confidence": 0.85,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "ARCHITECTURE_DESIGN:v1",
+          "TASK_DECOMPOSITION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "no_unsafe_content"
+      ]
+    },
+    {
+      "name": "unlabeled_simulated_output",
+      "input": {
+        "stageId": "RELEASE_READINESS",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "TESTING": {
+            "testPlan": [
+              "Unit test: URL validation rejects non-http schemes",
+              "Unit test: generated codes are 7 base62 characters",
+              "Integration test: POST then GET redirects to the original URL",
+              "Integration test: click count increments once per redirect"
+            ],
+            "expectedResults": [
+              "Invalid URLs return 400",
+              "Valid URLs return 201 with a code",
+              "Redirect returns 302 with the original Location",
+              "Click count equals the number of redirects"
+            ]
+          },
+          "DOCUMENTATION": {
+            "documents": [
+              "README usage section with create and redirect examples",
+              "API reference for POST /api/links and GET /{code}",
+              "Operations note on click counting behaviour"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ReleaseReadinessReviewer",
+        "status": "SUCCESS",
+        "summary": "Release checklist is complete with no blockers.",
+        "structuredOutput": {
+          "checklist": [
+            "Tests planned and expected results defined",
+            "Documentation outlined",
+            "No automatic code changes were applied",
+            "No secrets in any artifact"
+          ],
+          "ready": true,
+          "blockers": []
+        },
+        "assumptions": [
+          "A human approves the release"
+        ],
+        "risks": [
+          "Simulated evidence only; real test runs still required"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Hold the release gate review"
+        ],
+        "confidence": 0.82,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "TESTING:v1",
+          "DOCUMENTATION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "labeled_simulated"
+      ]
+    },
+    {
+      "name": "fallback_not_marked_simulated",
+      "input": {
+        "stageId": "TESTING",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "IMPLEMENTATION": {
+            "proposal": "Add LinkService.create(url) that validates the scheme, generates a 7-character base62 code and saves it, plus a redirect handler that looks the code up and answers 302.",
+            "applied": false
+          },
+          "IMPLEMENTATION_PLAN": {
+            "steps": [
+              "Add the Link entity and repository with a unique code index",
+              "Implement LinkService.create with URL validation and code generation",
+              "Expose POST /api/links returning the short code",
+              "Expose GET /{code} returning a 302 redirect",
+              "Record each redirect in ClickCounter"
+            ],
+            "filesToChange": [
+              "src/main/java/com/example/shortener/LinkService.java",
+              "src/main/java/com/example/shortener/LinkController.java",
+              "src/main/java/com/example/shortener/LinkRepository.java"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "TestPlanner",
+        "status": "FALLBACK",
+        "summary": "Fallback test plan produced by the deterministic mock.",
+        "structuredOutput": {
+          "testPlan": [
+            "Unit test: URL validation rejects non-http schemes",
+            "Unit test: generated codes are 7 base62 characters",
+            "Integration test: POST then GET redirects to the original URL",
+            "Integration test: click count increments once per redirect"
+          ],
+          "expectedResults": [
+            "Invalid URLs return 400",
+            "Valid URLs return 201 with a code",
+            "Redirect returns 302 with the original Location",
+            "Click count equals the number of redirects"
+          ]
+        },
+        "assumptions": [
+          "An in-memory database is used for tests"
+        ],
+        "risks": [
+          "Asynchronous counting can make count assertions flaky"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Run the test plan once the proposal is applied"
+        ],
+        "confidence": 0.84,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "IMPLEMENTATION:v1",
+          "IMPLEMENTATION_PLAN:v1"
+        ],
+        "simulated": false
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "labeled_simulated"
+      ]
+    },
+    {
+      "name": "reference_to_stage_not_in_upstream",
+      "input": {
+        "stageId": "TASK_DECOMPOSITION",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "REQUIREMENTS_ANALYSIS": {
+            "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+            "goals": [
+              "Create a short code for any valid http or https URL",
+              "Redirect a short code to its original URL with a 302 response",
+              "Expose a click count per short link"
+            ],
+            "constraints": [
+              "Only http and https URLs are accepted",
+              "Short codes are unique and URL-safe",
+              "Redirect latency stays under 50 ms at p95"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "TaskDecomposer",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Split the work into four ordered tasks covering create, redirect, analytics and validation.",
+        "structuredOutput": {
+          "tasks": [
+            {
+              "id": "T1",
+              "title": "Validate and normalise submitted URLs",
+              "dependsOn": []
+            },
+            {
+              "id": "T2",
+              "title": "Generate unique base62 short codes and store links",
+              "dependsOn": [
+                "T1"
+              ]
+            },
+            {
+              "id": "T3",
+              "title": "Serve the redirect endpoint",
+              "dependsOn": [
+                "T2"
+              ]
+            },
+            {
+              "id": "T4",
+              "title": "Count clicks per short link",
+              "dependsOn": [
+                "T3"
+              ]
+            }
+          ]
+        },
+        "assumptions": [
+          "One engineer works the tasks sequentially"
+        ],
+        "risks": [
+          "T4 may slow redirects if counting is synchronous"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Review the task order before planning"
+        ],
+        "confidence": 0.88,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "ARCHITECTURE_DESIGN:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "upstream_consistent"
+      ]
+    },
+    {
+      "name": "rerun_differs",
+      "input": {
+        "stageId": "ARCHITECTURE_DESIGN",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "TASK_DECOMPOSITION": {
+            "tasks": [
+              {
+                "id": "T1",
+                "title": "Validate and normalise submitted URLs",
+                "dependsOn": []
+              },
+              {
+                "id": "T2",
+                "title": "Generate unique base62 short codes and store links",
+                "dependsOn": [
+                  "T1"
+                ]
+              },
+              {
+                "id": "T3",
+                "title": "Serve the redirect endpoint",
+                "dependsOn": [
+                  "T2"
+                ]
+              },
+              {
+                "id": "T4",
+                "title": "Count clicks per short link",
+                "dependsOn": [
+                  "T3"
+                ]
+              }
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ArchitectureDesigner",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Proposed a layered design with a controller, a service and a repository.",
+        "structuredOutput": {
+          "components": [
+            "LinkController",
+            "LinkService",
+            "LinkRepository",
+            "ClickCounter"
+          ],
+          "decisions": [
+            "Use 7-character base62 codes drawn from a secure random source",
+            "Store links in the relational database with a unique index on the code",
+            "Count clicks asynchronously so redirects stay fast"
+          ],
+          "dataFlow": [
+            "Client -> LinkController -> LinkService -> LinkRepository",
+            "Redirect request -> LinkService lookup -> ClickCounter -> 302 response"
+          ]
+        },
+        "assumptions": [
+          "A single relational database is sufficient"
+        ],
+        "risks": [
+          "Unique index contention under heavy create load"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Approve the layering before planning"
+        ],
+        "confidence": 0.86,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "TASK_DECOMPOSITION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "deterministic"
+      ],
+      "rerun": {
+        "agentName": "ArchitectureDesigner",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] A different summary on the second run.",
+        "structuredOutput": {
+          "components": [
+            "LinkController",
+            "LinkService",
+            "LinkRepository",
+            "ClickCounter"
+          ],
+          "decisions": [
+            "Use 7-character base62 codes drawn from a secure random source",
+            "Store links in the relational database with a unique index on the code",
+            "Count clicks asynchronously so redirects stay fast"
+          ],
+          "dataFlow": [
+            "Client -> LinkController -> LinkService -> LinkRepository",
+            "Redirect request -> LinkService lookup -> ClickCounter -> 302 response"
+          ]
+        },
+        "assumptions": [
+          "A single relational database is sufficient"
+        ],
+        "risks": [
+          "Unique index contention under heavy create load"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Approve the layering before planning"
+        ],
+        "confidence": 0.86,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "TASK_DECOMPOSITION:v1"
+        ],
+        "simulated": true
+      }
+    },
+    {
+      "name": "production_deploy_action_in_checklist",
+      "input": {
+        "stageId": "RELEASE_READINESS",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "TESTING": {
+            "testPlan": [
+              "Unit test: URL validation rejects non-http schemes",
+              "Unit test: generated codes are 7 base62 characters",
+              "Integration test: POST then GET redirects to the original URL",
+              "Integration test: click count increments once per redirect"
+            ],
+            "expectedResults": [
+              "Invalid URLs return 400",
+              "Valid URLs return 201 with a code",
+              "Redirect returns 302 with the original Location",
+              "Click count equals the number of redirects"
+            ]
+          },
+          "DOCUMENTATION": {
+            "documents": [
+              "README usage section with create and redirect examples",
+              "API reference for POST /api/links and GET /{code}",
+              "Operations note on click counting behaviour"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ReleaseReadinessReviewer",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Release checklist is complete with no blockers.",
+        "structuredOutput": {
+          "checklist": [
+            "Run terraform apply for the production stack",
+            "Tests planned"
+          ],
+          "ready": true,
+          "blockers": []
+        },
+        "assumptions": [
+          "A human approves the release"
+        ],
+        "risks": [
+          "Simulated evidence only; real test runs still required"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Hold the release gate review"
+        ],
+        "confidence": 0.82,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "TESTING:v1",
+          "DOCUMENTATION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "no_unsafe_content"
+      ]
+    },
+    {
+      "name": "implementation_applied_true",
+      "input": {
+        "stageId": "IMPLEMENTATION",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "IMPLEMENTATION_PLAN": {
+            "steps": [
+              "Add the Link entity and repository with a unique code index",
+              "Implement LinkService.create with URL validation and code generation",
+              "Expose POST /api/links returning the short code",
+              "Expose GET /{code} returning a 302 redirect",
+              "Record each redirect in ClickCounter"
+            ],
+            "filesToChange": [
+              "src/main/java/com/example/shortener/LinkService.java",
+              "src/main/java/com/example/shortener/LinkController.java",
+              "src/main/java/com/example/shortener/LinkRepository.java"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ImplementationProposer",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Drafted a code proposal for link creation and redirect; nothing was applied.",
+        "structuredOutput": {
+          "proposal": "Add LinkService.create(url) that validates the scheme, generates a 7-character base62 code and saves it, plus a redirect handler that looks the code up and answers 302.",
+          "applied": true
+        },
+        "assumptions": [
+          "The proposal is reviewed by a human before it is applied"
+        ],
+        "risks": [
+          "Proposal has not been compiled or run"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Review the proposal and apply it manually"
+        ],
+        "confidence": 0.8,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "IMPLEMENTATION_PLAN:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "stage_complete"
+      ]
+    },
+    {
+      "name": "low_confidence_without_note",
+      "input": {
+        "stageId": "IMPLEMENTATION_PLAN",
+        "scenario": "GREENFIELD",
+        "rawRequirement": "Build a URL shortener that creates short links, redirects visitors and shows click counts.",
+        "normalizedRequirement": "Provide a service that turns a long URL into a short code, redirects visitors from the code to the original URL and reports how often each short link was opened.",
+        "upstreamOutputs": {
+          "ARCHITECTURE_DESIGN": {
+            "components": [
+              "LinkController",
+              "LinkService",
+              "LinkRepository",
+              "ClickCounter"
+            ],
+            "decisions": [
+              "Use 7-character base62 codes drawn from a secure random source",
+              "Store links in the relational database with a unique index on the code",
+              "Count clicks asynchronously so redirects stay fast"
+            ],
+            "dataFlow": [
+              "Client -> LinkController -> LinkService -> LinkRepository",
+              "Redirect request -> LinkService lookup -> ClickCounter -> 302 response"
+            ]
+          },
+          "TASK_DECOMPOSITION": {
+            "tasks": [
+              {
+                "id": "T1",
+                "title": "Validate and normalise submitted URLs",
+                "dependsOn": []
+              },
+              {
+                "id": "T2",
+                "title": "Generate unique base62 short codes and store links",
+                "dependsOn": [
+                  "T1"
+                ]
+              },
+              {
+                "id": "T3",
+                "title": "Serve the redirect endpoint",
+                "dependsOn": [
+                  "T2"
+                ]
+              },
+              {
+                "id": "T4",
+                "title": "Count clicks per short link",
+                "dependsOn": [
+                  "T3"
+                ]
+              }
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ImplementationPlanner",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Planned five implementation steps touching the controller, service and repository.",
+        "structuredOutput": {
+          "steps": [
+            "Add the Link entity and repository with a unique code index",
+            "Implement LinkService.create with URL validation and code generation",
+            "Expose POST /api/links returning the short code",
+            "Expose GET /{code} returning a 302 redirect",
+            "Record each redirect in ClickCounter"
+          ],
+          "filesToChange": [
+            "src/main/java/com/example/shortener/LinkService.java",
+            "src/main/java/com/example/shortener/LinkController.java",
+            "src/main/java/com/example/shortener/LinkRepository.java"
+          ]
+        },
+        "assumptions": [
+          "Existing database migrations can be extended"
+        ],
+        "risks": [
+          "Plan touches three core classes at once"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Review the plan before any implementation is proposed"
+        ],
+        "confidence": 0.4,
+        "confidenceNote": "",
+        "referencesToInputs": [
+          "ARCHITECTURE_DESIGN:v1",
+          "TASK_DECOMPOSITION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "schema_valid"
+      ]
+    },
+    {
+      "name": "ambiguous_analysis_without_questions_or_assumptions",
+      "input": {
+        "stageId": "REQUIREMENTS_ANALYSIS",
+        "scenario": "AMBIGUOUS",
+        "rawRequirement": "Make URL links safer and improve analytics.",
+        "normalizedRequirement": null,
+        "upstreamOutputs": {},
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "RequirementsAnalyst",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] The request is ambiguous; analysis lists open questions and explicit assumptions instead of guessing.",
+        "structuredOutput": {
+          "normalizedRequirement": "Improve the safety of shortened URLs and the quality of link analytics; both terms are underspecified.",
+          "goals": [
+            "Reduce the chance that short links lead to harmful destinations",
+            "Improve the usefulness of link analytics"
+          ],
+          "constraints": [
+            "Existing create and redirect API stays compatible"
+          ],
+          "classifiedRisks": [
+            {
+              "risk": "Scope creep because safer is undefined",
+              "class": "SCOPE"
+            },
+            {
+              "risk": "Collecting personal data for analytics",
+              "class": "PRIVACY"
+            },
+            {
+              "risk": "Blocking legitimate URLs with over-strict checks",
+              "class": "CORRECTNESS"
+            }
+          ]
+        },
+        "assumptions": [],
+        "risks": [
+          "Scope creep because safer is undefined",
+          "Privacy exposure from analytics",
+          "False positives blocking legitimate URLs"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Answer the open questions before design",
+          "Otherwise proceed with the stated safe assumptions"
+        ],
+        "confidence": 0.9,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [],
+        "simulated": true
+      },
+      "expectPass": false,
+      "expectFailedCriteria": [
+        "stage_complete"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,630 @@
+{
+  "scenario": "BROWNFIELD",
+  "cases": [
+    {
+      "name": "requirements_analysis_brownfield",
+      "input": {
+        "stageId": "REQUIREMENTS_ANALYSIS",
+        "scenario": "BROWNFIELD",
+        "rawRequirement": "Add click analytics to the existing URL shortener without breaking current create and redirect behaviour.",
+        "normalizedRequirement": null,
+        "upstreamOutputs": {},
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "RequirementsAnalyst",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Analysed an enhancement to the existing service: add click analytics while preserving compatibility.",
+        "structuredOutput": {
+          "normalizedRequirement": "Extend the existing URL shortener with per-link click analytics while keeping the current create and redirect API contract and idempotent creation unchanged.",
+          "goals": [
+            "Record a click event for every successful redirect",
+            "Expose click totals through a read-only endpoint",
+            "Keep POST /api/links idempotent for repeated URLs"
+          ],
+          "constraints": [
+            "Existing API responses must not change",
+            "Migrations must be backward compatible",
+            "Redirect latency must not regress"
+          ]
+        },
+        "assumptions": [
+          "The current short code scheme stays as is"
+        ],
+        "risks": [
+          "Regression of redirect behaviour"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Confirm the retention period for click events"
+        ],
+        "confidence": 0.9,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [],
+        "simulated": true
+      },
+      "expectPass": true
+    },
+    {
+      "name": "task_decomposition_brownfield",
+      "input": {
+        "stageId": "TASK_DECOMPOSITION",
+        "scenario": "BROWNFIELD",
+        "rawRequirement": "Add click analytics to the existing URL shortener without breaking current create and redirect behaviour.",
+        "normalizedRequirement": "Extend the existing URL shortener with per-link click analytics while keeping the current create and redirect API contract and idempotent creation unchanged.",
+        "upstreamOutputs": {
+          "REQUIREMENTS_ANALYSIS": {
+            "normalizedRequirement": "Extend the existing URL shortener with per-link click analytics while keeping the current create and redirect API contract and idempotent creation unchanged.",
+            "goals": [
+              "Record a click event for every successful redirect",
+              "Expose click totals through a read-only endpoint",
+              "Keep POST /api/links idempotent for repeated URLs"
+            ],
+            "constraints": [
+              "Existing API responses must not change",
+              "Migrations must be backward compatible",
+              "Redirect latency must not regress"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "TaskDecomposer",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Decomposed the enhancement into four tasks that protect existing behaviour.",
+        "structuredOutput": {
+          "tasks": [
+            {
+              "id": "T1",
+              "title": "Add a backward-compatible click_events table migration",
+              "dependsOn": []
+            },
+            {
+              "id": "T2",
+              "title": "Record click events in the redirect path off the request thread",
+              "dependsOn": [
+                "T1"
+              ]
+            },
+            {
+              "id": "T3",
+              "title": "Add a read-only analytics endpoint",
+              "dependsOn": [
+                "T2"
+              ]
+            },
+            {
+              "id": "T4",
+              "title": "Add regression tests proving create stays idempotent",
+              "dependsOn": [
+                "T3"
+              ]
+            }
+          ]
+        },
+        "assumptions": [
+          "Existing tests keep passing during the work"
+        ],
+        "risks": [
+          "Migration could lock the table on large datasets"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Review the tasks against the existing test suite"
+        ],
+        "confidence": 0.88,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "REQUIREMENTS_ANALYSIS:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": true
+    },
+    {
+      "name": "architecture_design_brownfield",
+      "input": {
+        "stageId": "ARCHITECTURE_DESIGN",
+        "scenario": "BROWNFIELD",
+        "rawRequirement": "Add click analytics to the existing URL shortener without breaking current create and redirect behaviour.",
+        "normalizedRequirement": "Extend the existing URL shortener with per-link click analytics while keeping the current create and redirect API contract and idempotent creation unchanged.",
+        "upstreamOutputs": {
+          "TASK_DECOMPOSITION": {
+            "tasks": [
+              {
+                "id": "T1",
+                "title": "Add a backward-compatible click_events table migration",
+                "dependsOn": []
+              },
+              {
+                "id": "T2",
+                "title": "Record click events in the redirect path off the request thread",
+                "dependsOn": [
+                  "T1"
+                ]
+              },
+              {
+                "id": "T3",
+                "title": "Add a read-only analytics endpoint",
+                "dependsOn": [
+                  "T2"
+                ]
+              },
+              {
+                "id": "T4",
+                "title": "Add regression tests proving create stays idempotent",
+                "dependsOn": [
+                  "T3"
+                ]
+              }
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ArchitectureDesigner",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Extended the existing layers with an event recorder and kept the public API stable.",
+        "structuredOutput": {
+          "components": [
+            "LinkController",
+            "LinkService",
+            "ClickEventRecorder",
+            "AnalyticsController"
+          ],
+          "decisions": [
+            "Add a new table instead of altering the links table",
+            "Record clicks via an asynchronous executor",
+            "Keep idempotency: the same URL returns the same short code"
+          ],
+          "dataFlow": [
+            "Redirect request -> LinkService lookup -> ClickEventRecorder (async) -> click_events table",
+            "Analytics request -> AnalyticsController -> aggregate query"
+          ],
+          "compatibilityRisks": [
+            "Async recorder queue overflow could drop events",
+            "New table adds write load on every redirect"
+          ]
+        },
+        "assumptions": [
+          "The existing database supports the new table"
+        ],
+        "risks": [
+          "Dropped events under load"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Review compatibility risks before planning"
+        ],
+        "confidence": 0.85,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "TASK_DECOMPOSITION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": true
+    },
+    {
+      "name": "implementation_plan_brownfield",
+      "input": {
+        "stageId": "IMPLEMENTATION_PLAN",
+        "scenario": "BROWNFIELD",
+        "rawRequirement": "Add click analytics to the existing URL shortener without breaking current create and redirect behaviour.",
+        "normalizedRequirement": "Extend the existing URL shortener with per-link click analytics while keeping the current create and redirect API contract and idempotent creation unchanged.",
+        "upstreamOutputs": {
+          "ARCHITECTURE_DESIGN": {
+            "components": [
+              "LinkController",
+              "LinkService",
+              "ClickEventRecorder",
+              "AnalyticsController"
+            ],
+            "decisions": [
+              "Add a new table instead of altering the links table",
+              "Record clicks via an asynchronous executor",
+              "Keep idempotency: the same URL returns the same short code"
+            ],
+            "dataFlow": [
+              "Redirect request -> LinkService lookup -> ClickEventRecorder (async) -> click_events table",
+              "Analytics request -> AnalyticsController -> aggregate query"
+            ],
+            "compatibilityRisks": [
+              "Async recorder queue overflow could drop events",
+              "New table adds write load on every redirect"
+            ]
+          },
+          "TASK_DECOMPOSITION": {
+            "tasks": [
+              {
+                "id": "T1",
+                "title": "Add a backward-compatible click_events table migration",
+                "dependsOn": []
+              },
+              {
+                "id": "T2",
+                "title": "Record click events in the redirect path off the request thread",
+                "dependsOn": [
+                  "T1"
+                ]
+              },
+              {
+                "id": "T3",
+                "title": "Add a read-only analytics endpoint",
+                "dependsOn": [
+                  "T2"
+                ]
+              },
+              {
+                "id": "T4",
+                "title": "Add regression tests proving create stays idempotent",
+                "dependsOn": [
+                  "T3"
+                ]
+              }
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ImplementationPlanner",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Planned incremental changes with the impacted existing files listed.",
+        "structuredOutput": {
+          "steps": [
+            "Add migration V3 creating click_events",
+            "Add ClickEventRecorder and call it after a successful lookup",
+            "Add AnalyticsController with GET /api/links/{code}/clicks",
+            "Extend tests to assert POST /api/links remains idempotent"
+          ],
+          "filesToChange": [
+            "src/main/resources/db/migration/V3__click_events.sql",
+            "src/main/java/com/example/shortener/LinkService.java",
+            "src/main/java/com/example/shortener/AnalyticsController.java"
+          ],
+          "impactedFiles": [
+            "src/main/java/com/example/shortener/LinkController.java",
+            "src/test/java/com/example/shortener/LinkServiceTest.java"
+          ],
+          "dataFlow": [
+            "LinkService -> ClickEventRecorder -> click_events"
+          ],
+          "compatibilityRisks": [
+            "Idempotency of POST /api/links must be re-verified after the change"
+          ]
+        },
+        "assumptions": [
+          "Existing migrations are already applied in all environments"
+        ],
+        "risks": [
+          "Touching LinkService risks changing create behaviour"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Review impacted files with the code owners"
+        ],
+        "confidence": 0.84,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "ARCHITECTURE_DESIGN:v1",
+          "TASK_DECOMPOSITION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": true
+    },
+    {
+      "name": "implementation_brownfield",
+      "input": {
+        "stageId": "IMPLEMENTATION",
+        "scenario": "BROWNFIELD",
+        "rawRequirement": "Add click analytics to the existing URL shortener without breaking current create and redirect behaviour.",
+        "normalizedRequirement": "Extend the existing URL shortener with per-link click analytics while keeping the current create and redirect API contract and idempotent creation unchanged.",
+        "upstreamOutputs": {
+          "IMPLEMENTATION_PLAN": {
+            "steps": [
+              "Add migration V3 creating click_events",
+              "Add ClickEventRecorder and call it after a successful lookup",
+              "Add AnalyticsController with GET /api/links/{code}/clicks",
+              "Extend tests to assert POST /api/links remains idempotent"
+            ],
+            "filesToChange": [
+              "src/main/resources/db/migration/V3__click_events.sql",
+              "src/main/java/com/example/shortener/LinkService.java",
+              "src/main/java/com/example/shortener/AnalyticsController.java"
+            ],
+            "impactedFiles": [
+              "src/main/java/com/example/shortener/LinkController.java",
+              "src/test/java/com/example/shortener/LinkServiceTest.java"
+            ],
+            "dataFlow": [
+              "LinkService -> ClickEventRecorder -> click_events"
+            ],
+            "compatibilityRisks": [
+              "Idempotency of POST /api/links must be re-verified after the change"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ImplementationProposer",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Drafted a patch proposal that adds click recording; nothing was applied.",
+        "structuredOutput": {
+          "proposal": "After a successful lookup in LinkService, hand a click event to ClickEventRecorder, which writes it asynchronously. The create path is untouched so repeated POSTs for the same URL still return the same code (idempotent).",
+          "applied": false,
+          "impactedFiles": [
+            "LinkService.java",
+            "ClickEventRecorder.java"
+          ],
+          "dataFlow": [
+            "lookup -> record -> persist"
+          ],
+          "compatibilityRisks": [
+            "Recorder failure must never fail the redirect"
+          ]
+        },
+        "assumptions": [
+          "Reviewers apply the patch by hand"
+        ],
+        "risks": [
+          "Patch not yet compiled"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Review the proposal for idempotency impact"
+        ],
+        "confidence": 0.8,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "IMPLEMENTATION_PLAN:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": true
+    },
+    {
+      "name": "testing_brownfield",
+      "input": {
+        "stageId": "TESTING",
+        "scenario": "BROWNFIELD",
+        "rawRequirement": "Add click analytics to the existing URL shortener without breaking current create and redirect behaviour.",
+        "normalizedRequirement": "Extend the existing URL shortener with per-link click analytics while keeping the current create and redirect API contract and idempotent creation unchanged.",
+        "upstreamOutputs": {
+          "IMPLEMENTATION": {
+            "proposal": "After a successful lookup in LinkService, hand a click event to ClickEventRecorder, which writes it asynchronously. The create path is untouched so repeated POSTs for the same URL still return the same code (idempotent).",
+            "applied": false,
+            "impactedFiles": [
+              "LinkService.java",
+              "ClickEventRecorder.java"
+            ],
+            "dataFlow": [
+              "lookup -> record -> persist"
+            ],
+            "compatibilityRisks": [
+              "Recorder failure must never fail the redirect"
+            ]
+          },
+          "IMPLEMENTATION_PLAN": {
+            "steps": [
+              "Add migration V3 creating click_events",
+              "Add ClickEventRecorder and call it after a successful lookup",
+              "Add AnalyticsController with GET /api/links/{code}/clicks",
+              "Extend tests to assert POST /api/links remains idempotent"
+            ],
+            "filesToChange": [
+              "src/main/resources/db/migration/V3__click_events.sql",
+              "src/main/java/com/example/shortener/LinkService.java",
+              "src/main/java/com/example/shortener/AnalyticsController.java"
+            ],
+            "impactedFiles": [
+              "src/main/java/com/example/shortener/LinkController.java",
+              "src/test/java/com/example/shortener/LinkServiceTest.java"
+            ],
+            "dataFlow": [
+              "LinkService -> ClickEventRecorder -> click_events"
+            ],
+            "compatibilityRisks": [
+              "Idempotency of POST /api/links must be re-verified after the change"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "TestPlanner",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Test plan includes regression checks for the existing contract and idempotency.",
+        "structuredOutput": {
+          "testPlan": [
+            "Regression: POST /api/links twice with the same URL returns the same code",
+            "Regression: redirect still answers 302 with the original Location",
+            "New: click event is recorded after a redirect",
+            "New: analytics endpoint returns the click total"
+          ],
+          "expectedResults": [
+            "Idempotency is preserved",
+            "Existing responses are unchanged",
+            "One event per redirect",
+            "Totals match recorded events"
+          ]
+        },
+        "assumptions": [
+          "Existing tests are run unchanged"
+        ],
+        "risks": [
+          "Async recording makes timing assertions flaky"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Run regression tests first"
+        ],
+        "confidence": 0.84,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "IMPLEMENTATION:v1",
+          "IMPLEMENTATION_PLAN:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": true
+    },
+    {
+      "name": "documentation_brownfield",
+      "input": {
+        "stageId": "DOCUMENTATION",
+        "scenario": "BROWNFIELD",
+        "rawRequirement": "Add click analytics to the existing URL shortener without breaking current create and redirect behaviour.",
+        "normalizedRequirement": "Extend the existing URL shortener with per-link click analytics while keeping the current create and redirect API contract and idempotent creation unchanged.",
+        "upstreamOutputs": {
+          "IMPLEMENTATION": {
+            "proposal": "After a successful lookup in LinkService, hand a click event to ClickEventRecorder, which writes it asynchronously. The create path is untouched so repeated POSTs for the same URL still return the same code (idempotent).",
+            "applied": false,
+            "impactedFiles": [
+              "LinkService.java",
+              "ClickEventRecorder.java"
+            ],
+            "dataFlow": [
+              "lookup -> record -> persist"
+            ],
+            "compatibilityRisks": [
+              "Recorder failure must never fail the redirect"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "DocumentationWriter",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Documentation updates describe the new endpoint and unchanged contract.",
+        "structuredOutput": {
+          "documents": [
+            "API reference entry for GET /api/links/{code}/clicks",
+            "Changelog note stating create and redirect are unchanged and creation stays idempotent",
+            "Operations note on the click_events table"
+          ]
+        },
+        "assumptions": [
+          "Changelog is maintained by the team"
+        ],
+        "risks": [
+          "Readers may assume analytics are real-time"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Review docs together with the patch"
+        ],
+        "confidence": 0.87,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "IMPLEMENTATION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": true
+    },
+    {
+      "name": "release_readiness_brownfield",
+      "input": {
+        "stageId": "RELEASE_READINESS",
+        "scenario": "BROWNFIELD",
+        "rawRequirement": "Add click analytics to the existing URL shortener without breaking current create and redirect behaviour.",
+        "normalizedRequirement": "Extend the existing URL shortener with per-link click analytics while keeping the current create and redirect API contract and idempotent creation unchanged.",
+        "upstreamOutputs": {
+          "TESTING": {
+            "testPlan": [
+              "Regression: POST /api/links twice with the same URL returns the same code",
+              "Regression: redirect still answers 302 with the original Location",
+              "New: click event is recorded after a redirect",
+              "New: analytics endpoint returns the click total"
+            ],
+            "expectedResults": [
+              "Idempotency is preserved",
+              "Existing responses are unchanged",
+              "One event per redirect",
+              "Totals match recorded events"
+            ]
+          },
+          "DOCUMENTATION": {
+            "documents": [
+              "API reference entry for GET /api/links/{code}/clicks",
+              "Changelog note stating create and redirect are unchanged and creation stays idempotent",
+              "Operations note on the click_events table"
+            ]
+          }
+        },
+        "policyConstraints": [
+          "Agents propose only; no automatic code changes",
+          "No secrets in outputs",
+          "Simulated output must be labeled"
+        ]
+      },
+      "output": {
+        "agentName": "ReleaseReadinessReviewer",
+        "status": "SUCCESS",
+        "summary": "[SIMULATED] Release checklist reviewed; compatibility and idempotency evidence is planned.",
+        "structuredOutput": {
+          "checklist": [
+            "Regression tests defined for create idempotency",
+            "Migration is backward compatible",
+            "Documentation covers the new endpoint",
+            "No automatic changes were applied"
+          ],
+          "ready": true,
+          "blockers": []
+        },
+        "assumptions": [
+          "A human approves the release"
+        ],
+        "risks": [
+          "Simulated evidence only; real regression run required"
+        ],
+        "openQuestions": [],
+        "recommendedNextActions": [
+          "Hold the release gate review"
+        ],
+        "confidence": 0.82,
+        "confidenceNote": "Deterministic mock output; no model judgement involved.",
+        "referencesToInputs": [
+          "TESTING:v1",
+          "DOCUMENTATION:v1"
+        ],
+        "simulated": true
+      },
+      "expectPass": true
+    }
+  ]
+}
