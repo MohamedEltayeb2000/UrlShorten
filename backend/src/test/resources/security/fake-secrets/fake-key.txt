@@ -1,0 +1,2 @@
+FAKE TEST FIXTURE - NOT A REAL SECRET (allow-listed in .gitleaks.toml)
+api_key = "FAKEKEY_0123456789abcdef0123456789abcdef_DO_NOT_USE"

@@ -1,0 +1,19 @@
+javascript:alert(1)
+JaVaScRiPt:alert(1)
+data:text/html,<script>alert(1)</script>
+file:///etc/passwd
+vbscript:msgbox(1)
+ftp://example.com/file
+//evil.example.com/path
+example.com
+http://
+https:///no-host
+http://exa mple.com
+http://example.com/\r\nSet-Cookie: a=b
+http://user:pass@example.com/
+http://google.com@evil.example.com/
+http://exаmple.com/lookalike
+http://example.com/<script>alert(1)</script> x
+http://example.com:99999/
+http://example.com\@evil.example.com/
+'; DROP TABLE short_link; --
