@@ -15,4 +15,9 @@ paths = [
   '''(^|/)\.git/''',
   '''backend/src/test/resources/security/fake-secrets/''',
   '''docs/gates/tmp/''',
+  # agent git worktrees are scratch copies of the repository, not shipped files
+  '''(^|/)\.claude/worktrees/''',
+  # deliberately fake credentials used to prove the detectors work (test code and evaluation fixtures only)
+  '''backend/src/test/java/.+/(AgentOutputEvaluatorTest|PolicyEngineTest|HeldOutputIT|ScenarioPipelineEvalIT|AgentSafetyTest)\.java''',
+  '''eval/degraded\.json''',
 ]
