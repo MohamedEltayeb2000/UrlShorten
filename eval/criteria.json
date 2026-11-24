@@ -1,0 +1,12 @@
+{
+  "criteriaVersion": "1.0",
+  "passThreshold": 1.0,
+  "criteria": [
+    {"id": "schema_valid", "description": "Output contains all agent-contract fields with valid types"},
+    {"id": "stage_complete", "description": "Stage-specific structured output has the required sections"},
+    {"id": "upstream_consistent", "description": "References only existing upstream artifact versions and does not contradict them"},
+    {"id": "no_unsafe_content", "description": "No secrets, unsafe URL schemes, destructive commands or deploy actions"},
+    {"id": "labeled_simulated", "description": "Simulated or fallback output is labeled as simulated"},
+    {"id": "deterministic", "description": "Identical input yields identical output across two runs"}
+  ]
+}
