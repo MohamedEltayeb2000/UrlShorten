@@ -96,7 +96,7 @@
                        "id":  "P4",
                        "name":  "Agents, artifacts, audit, evaluation",
                        "status":  "COMPLETE",
-                       "publish":  null,
+                       "publish":  "PUBLISHED",
                        "capabilities":  [
                                             "Agent contract + mock agents",
                                             "Versioned artifacts",
