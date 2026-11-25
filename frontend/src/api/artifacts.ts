@@ -32,3 +32,9 @@ export const listArtifacts = (runId: string) =>
 
 export const listEvents = (runId: string, page = 0, size = 10) =>
   http<Page<AuditEventView>>(`/api/agent-runs/${encodeURIComponent(runId)}/events?page=${page}&size=${size}`)
+
+export const rollbackArtifact = (runId: string, nodeId: string, artifactType: string, version: number) =>
+  http<ArtifactView>(`/api/agent-runs/${encodeURIComponent(runId)}/rollback`, {
+    method: 'POST',
+    body: JSON.stringify({ nodeId, artifactType, version }),
+  })

@@ -40,3 +40,12 @@ export const getRun = (id: number) => http<RunDetail>(`/api/agent-runs/${id}`)
 export const startRun = (id: number) => http<RunDetail>(`/api/agent-runs/${id}/start`, { method: 'POST' })
 
 export const pauseRun = (id: number) => http<RunDetail>(`/api/agent-runs/${id}/pause`, { method: 'POST' })
+
+export const retryNode = (runId: number, nodeId: string) =>
+  http<RunDetail>(`/api/agent-runs/${runId}/nodes/${encodeURIComponent(nodeId)}/retry`, { method: 'POST' })
+
+export const replanRun = (runId: number, nodeId: string, requirement?: string) =>
+  http<RunDetail>(`/api/agent-runs/${runId}/replan`, {
+    method: 'POST',
+    body: JSON.stringify({ nodeId, requirement: requirement || undefined }),
+  })

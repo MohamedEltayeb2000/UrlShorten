@@ -9,6 +9,9 @@ import com.example.shortener.artifacts.ArtifactService;
 import com.example.shortener.artifacts.ArtifactStatus;
 import com.example.shortener.audit.AuditEvent;
 import com.example.shortener.audit.AuditService;
+import com.example.shortener.governance.Actor;
+import com.example.shortener.governance.ActorType;
+import com.example.shortener.governance.ApprovalService;
 import com.example.shortener.support.Requirement;
 import java.time.Duration;
 import java.util.List;
@@ -32,10 +35,24 @@ class AgentRunIT {
     @Autowired AuditService audit;
     @Autowired RunNodeRepository nodes;
     @Autowired StageAttemptRepository attempts;
+    @Autowired ApprovalService approvalService;
 
+    /** Runs to a terminal state, approving high-impact gates like a human reviewer would; clarifications are left waiting. */
     private RunDtos.RunDetail runToEnd(String requirement, String scenario) throws Exception {
         long id = service.create(requirement, scenario).id();
         service.start(id);
+        Actor reviewer = new Actor("reviewer", ActorType.HUMAN);
+        for (int round = 0; round < 6; round++) {
+            await(() -> {
+                String s = service.detail(id).status();
+                return terminal(s) || s.equals("WAITING_FOR_APPROVAL");
+            }, Duration.ofSeconds(30), "run to finish or wait");
+            var pending = approvalService.pending().stream().filter(p -> p.runId() == id && p.kind().equals("HIGH_IMPACT_ACTION")).toList();
+            if (pending.isEmpty()) break;
+            for (var p : pending) {
+                approvalService.decide(id, new ApprovalService.DecisionRequest(p.nodeId(), "APPROVE", "reviewed in test", p.artifactVersion()), reviewer);
+            }
+        }
         await(() -> {
             String s = service.detail(id).status();
             return terminal(s) || s.equals("WAITING_FOR_APPROVAL");

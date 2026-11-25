@@ -2,6 +2,8 @@ package com.example.shortener.orchestrator;
 
 import com.example.shortener.audit.AuditService;
 import com.example.shortener.common.ApiException;
+import com.example.shortener.governance.Approval;
+import com.example.shortener.governance.ApprovalRepository;
 import jakarta.annotation.PreDestroy;
 import java.time.Instant;
 import java.util.EnumSet;
@@ -12,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +27,10 @@ import org.springframework.stereotype.Service;
 /**
  * Dependency-driven scheduler. A node becomes READY only when every prerequisite SUCCEEDED, ready nodes run concurrently
  * up to {@code max-parallel}, and every state change is persisted before and after execution so progress is observable
- * and recoverable. Pausing stops new scheduling (running stages finish); a restart marks interrupted stages BLOCKED and
- * pauses the run until an operator resumes it.
+ * and recoverable. Transient failures are retried with bounded attempts and backoff, then fall back to a deterministic
+ * simulated provider; validation and policy failures are never retried. A stage that needs a human decision waits in
+ * WAITING_FOR_APPROVAL. Pausing stops new scheduling (running stages finish); a restart marks interrupted stages BLOCKED
+ * and pauses the run until an operator resumes it.
  */
 @Service
 public class RunScheduler {
@@ -39,13 +44,15 @@ public class RunScheduler {
     private final StageHandler handler;
     private final StageAttemptRepository attempts;
     private final AuditService audit;
+    private final ApprovalRepository approvals;
+    private final RetryPolicy retryPolicy;
     private final Semaphore permits;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final Map<Long, Object> locks = new ConcurrentHashMap<>();
     private final Set<Long> queued = ConcurrentHashMap.newKeySet();
 
     public RunScheduler(AgentRunRepository runs, RunNodeRepository nodes, RunTransitions transitions, StageHandler handler,
-                        StageAttemptRepository attempts, AuditService audit,
+                        StageAttemptRepository attempts, AuditService audit, ApprovalRepository approvals, RetryPolicy retryPolicy,
                         @Value("${shortener.orchestrator.max-parallel:4}") int maxParallel) {
         this.runs = runs;
         this.nodes = nodes;
@@ -53,6 +60,8 @@ public class RunScheduler {
         this.handler = handler;
         this.attempts = attempts;
         this.audit = audit;
+        this.approvals = approvals;
+        this.retryPolicy = retryPolicy;
         this.permits = new Semaphore(Math.max(1, maxParallel));
     }
 
@@ -63,6 +72,21 @@ public class RunScheduler {
 
     private Object lock(long runId) {
         return locks.computeIfAbsent(runId, k -> new Object());
+    }
+
+    /** Runs an action while holding the run's scheduling lock (used by run control operations). */
+    public <T> T locked(long runId, Supplier<T> action) {
+        synchronized (lock(runId)) {
+            return action.get();
+        }
+    }
+
+    /** Re-evaluates the run and starts whatever became ready. Call while holding the run lock (see {@link #locked}). */
+    public void kickLocked(long runId) {
+        for (RunNode n : nodes.findByRunIdOrderById(runId)) {
+            if (n.getStatus() == NodeStatus.READY && load(runId).getStatus() == RunStatus.RUNNING) submit(runId, n.getId());
+        }
+        scheduleLocked(runId);
     }
 
     /** Starts a CREATED run or resumes a PAUSED one (idempotent while RUNNING). */
@@ -85,10 +109,7 @@ public class RunScheduler {
             if (run.getStartedAt() == null) run.setStartedAt(Instant.now());
             runs.save(run);
             audit.append(runId, "SYSTEM", "scheduler", "RUN_STARTED", "run started or resumed", null);
-            for (RunNode n : nodes.findByRunIdOrderById(runId)) {
-                if (n.getStatus() == NodeStatus.READY) submit(runId, n.getId());
-            }
-            scheduleLocked(runId);
+            kickLocked(runId);
         }
     }
 
@@ -113,7 +134,7 @@ public class RunScheduler {
             if (run.getStatus() != RunStatus.RUNNING) continue;
             synchronized (lock(run.getId())) {
                 for (RunNode n : nodes.findByRunIdOrderById(run.getId())) {
-                    if (n.getStatus() == NodeStatus.RUNNING) {
+                    if (n.getStatus() == NodeStatus.RUNNING || n.getStatus() == NodeStatus.RETRYING) {
                         transitions.move(n.getId(), NodeStatus.BLOCKED, "interrupted by restart: operator action required", x -> {
                             x.setErrorCode(INTERRUPTED);
                             x.setErrorSummary("Execution was interrupted by an application restart");
@@ -172,6 +193,25 @@ public class RunScheduler {
         executor.submit(() -> runNode(runId, nodeDbId));
     }
 
+    private record Outcome(Exception failure, AwaitingDecisionException awaiting, HeldForReviewException held) {
+        static Outcome ok() { return new Outcome(null, null, null); }
+        boolean ok2() { return failure == null && awaiting == null && held == null; }
+    }
+
+    private Outcome invoke(StageExecution ex, boolean fallback) {
+        try {
+            if (fallback) handler.executeFallback(ex);
+            else handler.execute(ex);
+            return Outcome.ok();
+        } catch (AwaitingDecisionException e) {
+            return new Outcome(null, e, null);
+        } catch (HeldForReviewException e) {
+            return new Outcome(null, null, e);
+        } catch (Exception e) {
+            return new Outcome(e, null, null);
+        }
+    }
+
     private void runNode(long runId, long nodeDbId) {
         boolean ran = false;
         try {
@@ -190,36 +230,34 @@ public class RunScheduler {
                 }
                 ran = true;
                 StageAttempt record = attempts.save(new StageAttempt(nodeDbId, attempt, "RUNNING", Instant.now()));
-                try {
-                    handler.execute(new StageExecution(runId, nodeId, attempt,
-                            () -> runs.findById(runId).map(r -> r.getStatus() != RunStatus.RUNNING).orElse(true)));
+                Outcome out = invoke(execution(runId, nodeId, attempt), false);
+
+                // Bounded retry of transient failures with backoff; validation/policy failures never retry.
+                while (out.failure() != null && retryPolicy.shouldRetry(attempt, out.failure())) {
+                    long waitMs = retryPolicy.backoff(attempt).toMillis();
+                    finish(record, "RETRYING", summarize(out.failure()), false);
                     synchronized (lock(runId)) {
-                        transitions.move(nodeDbId, NodeStatus.SUCCEEDED, "completed", n -> n.setCompletedAt(Instant.now()));
+                        transitions.move(nodeDbId, NodeStatus.RETRYING,
+                                "transient failure on attempt " + attempt + "/" + retryPolicy.maxAttempts() + ", retrying in " + waitMs + " ms", null);
                     }
-                    finish(record, "SUCCEEDED", null);
-                } catch (AwaitingDecisionException e) {
+                    audit.append(runId, "SYSTEM", "scheduler", "STAGE_RETRY", nodeId + ": " + summarize(out.failure()) + " (waiting " + waitMs + " ms)", null);
+                    Thread.sleep(waitMs);
                     synchronized (lock(runId)) {
-                        transitions.move(nodeDbId, NodeStatus.WAITING_FOR_APPROVAL, "waiting for a human decision: " + e.getMessage(), null);
+                        RunNode again = transitions.move(nodeDbId, NodeStatus.RUNNING, "retry", n -> n.setAttemptCount(n.getAttemptCount() + 1));
+                        attempt = again.getAttemptCount();
                     }
-                    finish(record, "WAITING_FOR_APPROVAL", null);
-                } catch (HeldForReviewException e) {
-                    synchronized (lock(runId)) {
-                        transitions.move(nodeDbId, NodeStatus.BLOCKED, "output held for review", n -> {
-                            n.setErrorCode("HELD");
-                            n.setErrorSummary(summarize(e));
-                        });
-                    }
-                    finish(record, "HELD", summarize(e));
-                } catch (Exception e) {
-                    synchronized (lock(runId)) {
-                        transitions.move(nodeDbId, NodeStatus.FAILED, "failed: " + e.getClass().getSimpleName(), n -> {
-                            n.setCompletedAt(Instant.now());
-                            n.setErrorCode(e.getClass().getSimpleName());
-                            n.setErrorSummary(summarize(e));
-                        });
-                    }
-                    finish(record, "FAILED", summarize(e));
+                    record = attempts.save(new StageAttempt(nodeDbId, attempt, "RUNNING", Instant.now()));
+                    out = invoke(execution(runId, nodeId, attempt), false);
                 }
+
+                // Provider kept failing transiently: use the deterministic simulated fallback (clearly labeled).
+                boolean fallbackUsed = false;
+                if (out.failure() != null && isTransient(out.failure()) && handler.supportsFallback()) {
+                    audit.append(runId, "SYSTEM", "scheduler", "FALLBACK_USED", nodeId + ": retries exhausted, using the simulated fallback", null);
+                    fallbackUsed = true;
+                    out = invoke(execution(runId, nodeId, attempt), true);
+                }
+                apply(runId, nodeDbId, nodeId, out, record, fallbackUsed);
             } finally {
                 permits.release();
             }
@@ -237,8 +275,57 @@ public class RunScheduler {
         }
     }
 
-    private void finish(StageAttempt record, String status, String error) {
-        record.finish(status, Instant.now(), handler.providerName(), false, error);
+    private StageExecution execution(long runId, String nodeId, int attempt) {
+        return new StageExecution(runId, nodeId, attempt,
+                () -> runs.findById(runId).map(r -> r.getStatus() != RunStatus.RUNNING).orElse(true));
+    }
+
+    private void apply(long runId, long nodeDbId, String nodeId, Outcome out, StageAttempt record, boolean fallbackUsed) {
+        if (out.ok2()) {
+            synchronized (lock(runId)) {
+                transitions.move(nodeDbId, NodeStatus.SUCCEEDED, fallbackUsed ? "completed with simulated fallback" : "completed",
+                        n -> n.setCompletedAt(Instant.now()));
+            }
+            finish(record, "SUCCEEDED", null, fallbackUsed);
+        } else if (out.awaiting() != null) {
+            AwaitingDecisionException e = out.awaiting();
+            synchronized (lock(runId)) {
+                transitions.move(nodeDbId, NodeStatus.WAITING_FOR_APPROVAL, "waiting for a human decision: " + e.getMessage(), null);
+                approvals.save(new Approval(runId, nodeId, e.kind(), e.policyReason() == null ? e.getMessage() : e.policyReason(),
+                        e.artifactVersion()));
+            }
+            audit.append(runId, "SYSTEM", "scheduler", "APPROVAL_REQUESTED", nodeId + ": " + e.kind() + " - " + e.getMessage(), null);
+            finish(record, "WAITING_FOR_APPROVAL", null, fallbackUsed);
+        } else if (out.held() != null) {
+            HeldForReviewException e = out.held();
+            synchronized (lock(runId)) {
+                transitions.move(nodeDbId, NodeStatus.BLOCKED, "output held for review", n -> {
+                    n.setErrorCode("HELD");
+                    n.setErrorSummary(summarize(e));
+                });
+            }
+            finish(record, "HELD", summarize(e), fallbackUsed);
+        } else {
+            Exception e = out.failure();
+            synchronized (lock(runId)) {
+                transitions.move(nodeDbId, NodeStatus.FAILED, "failed: " + e.getClass().getSimpleName(), n -> {
+                    n.setCompletedAt(Instant.now());
+                    n.setErrorCode(e.getClass().getSimpleName());
+                    n.setErrorSummary(summarize(e));
+                });
+            }
+            finish(record, "FAILED", summarize(e), fallbackUsed);
+        }
+    }
+
+    private static boolean isTransient(Throwable t) {
+        for (Throwable c = t; c != null; c = c.getCause()) if (c instanceof TransientFailureException) return true;
+        return false;
+    }
+
+    private void finish(StageAttempt record, String status, String error, boolean fallbackUsed) {
+        String provider = fallbackUsed ? handler.providerName() + "-fallback" : handler.providerName();
+        record.finish(status, Instant.now(), provider, fallbackUsed, error);
         attempts.save(record);
     }
 
