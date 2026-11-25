@@ -16,17 +16,20 @@ export default function ArtifactsPage() {
   const [error, setError] = useState<string | null>(null)
   const errRef = useRef<HTMLParagraphElement>(null)
 
+  const [reload, setReload] = useState(0)
+
   useEffect(() => {
     let cancelled = false
     setError(null)
-    setArtifacts(null)
     listArtifacts(id)
       .then((a) => !cancelled && setArtifacts(a))
       .catch((e: Error) => !cancelled && setError(e.message))
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, reload])
+
+  useEffect(() => setArtifacts(null), [id])
 
   useEffect(() => {
     if (error) errRef.current?.focus()
@@ -47,7 +50,12 @@ export default function ArtifactsPage() {
           <section key={stage} aria-labelledby={`stage-${stage}`} className="panel">
             <h3 id={`stage-${stage}`}>Stage: {stage}</h3>
             {groupBy(items, (a) => a.type).map(([type, versions]) => (
-              <ArtifactViewer key={type} versions={versions} />
+              <ArtifactViewer
+                key={type + versions.map((v) => v.id + v.status).join()}
+                versions={versions}
+                runId={id}
+                onChanged={() => setReload((n) => n + 1)}
+              />
             ))}
           </section>
         ))}

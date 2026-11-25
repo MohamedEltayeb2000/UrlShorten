@@ -43,3 +43,14 @@ pre.content, pre.diff { background: #f3f4f6; padding: 0.5rem; overflow-x: auto; 
 .diff-add { background: #dcfce7; }
 .diff-del { background: #fee2e2; }
 .timeline { padding-left: 1.25rem; }
+.approval-list { list-style: none; padding: 0; }
+.approval-card { margin: 0.75rem 0; }
+.approval-card label { display: block; margin-top: 0.5rem; }
+.approval-card textarea, .approval-card input { width: 100%; box-sizing: border-box; }
+.decision { font-weight: 700; }
+.decision-rejected { color: #b45309; }
+.decision-approved { color: #047857; }
+.replan { margin-top: 1rem; }
+.replan label { display: block; }
+.note { font-style: italic; color: #4b5563; }
+.restore-confirm { background: #fef3c7; padding: 0.5rem; border: 1px solid #b45309; }

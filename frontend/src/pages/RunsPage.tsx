@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react'
-import { createRun, getRun, listRuns, pauseRun, startRun, RunDetail, RunSummary, Scenario } from '../api/runs'
+import { createRun, getRun, listRuns, pauseRun, replanRun, retryNode, startRun, RunDetail, RunSummary, Scenario } from '../api/runs'
 import RunDetailPanel from '../components/RunDetailPanel'
 import { usePolling } from '../hooks/usePolling'
 
@@ -134,6 +134,8 @@ export default function RunsPage() {
           busy={busy}
           onStart={() => void act(startRun)}
           onPause={() => void act(pauseRun)}
+          onRetry={(nodeId) => void act((id) => retryNode(id, nodeId))}
+          onReplan={(nodeId, req) => void act((id) => replanRun(id, nodeId, req))}
         />
       )}
     </section>
