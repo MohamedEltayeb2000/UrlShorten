@@ -82,3 +82,13 @@ The following Phase 6 pieces add observability and reporting rather than new ris
   simulated nature of the mock content and states its limitations.
 * **Scenario presets** (`GET /api/scenarios`) make runs repeatable; they do not change agent behavior.
 * **Optional LLM provider** is the only change that can introduce real model output. See R13.
+
+## Phase 7 additions
+
+- **Heuristic analysis, not a model.** The simulated analyst detects ambiguity by rules (vague terms, short or reference-only requirements); the brownfield analyzer
+  reads one primary type per file with regexes. Both are deterministic and testable but will miss what a language model or a real parser would catch. The optional
+  LLM provider is the intended path and has only been tested against a stub server.
+- **Auto re-plan waits.** Re-planning while downstream stages run pauses the run and waits up to 15 s; on timeout the run stays PAUSED (409) until an operator acts.
+- **Gates are fixed checks.** The gate check names are descriptive; the actual checks live in `StageGates` and cover prerequisites, stored output, evaluation and policy.
+- **Change tickets are validated by format only.** No external ticketing system is queried.
+- **Browser tests start real servers.** `npm run e2e` needs ports 8080 and 5173 free and about a minute.

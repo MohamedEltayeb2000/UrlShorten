@@ -239,3 +239,13 @@ response schemas.
 | `GET /api/agent-runs/{id}/summary` | Markdown engineering summary of a run (plan, artifacts, assumptions, risks, validation, limitations). |
 | `GET /api/scenarios` | The Greenfield, Brownfield and Ambiguous presets. |
 | `POST /api/agent-runs` with only `{ "scenario": "BROWNFIELD" }` | Create a run from a preset; the preset supplies the requirement text. |
+
+## Phase 7 additions
+
+| Method and path | Purpose |
+|-----------------|---------|
+| `PUT /api/agent-runs/{runId}/artifacts` | A human edits the CURRENT version of a stage artifact (`{nodeId, artifactType, content, comment}`); creates a new version and automatically re-plans downstream stages. Errors: 403 `APPROVAL_FORBIDDEN` (agent actor), 400 `COMMENT_REQUIRED` / `CONTENT_TOO_LONG` / `POLICY_DENIED`, 404 unknown stage, 409 `NO_CURRENT_ARTIFACT` / `REPLAN_TIMEOUT` |
+| `POST /api/agent-runs/{runId}/approvals` | Body gains `changeTicket` and `riskJustification`; approving a HIGH-risk approval without a valid ticket (`ABC-123` form) and a justification of 10+ characters returns 400 `CHANGE_RECORD_REQUIRED` |
+| `GET /api/approvals/pending`, `GET /api/agent-runs/{id}/approvals` | Views gain `riskClass`, `changeTicket`, `riskJustification`, `proposedCommands`, `proposedMigrations` |
+| `GET /api/agent-runs/{id}` | Each node gains `gates` = `{entry: {passed, checks}, exit: {passed, checks}}` |
+| Audit event types added | `GATE_ENTRY_PASSED/FAILED`, `GATE_EXIT_PASSED/FAILED`, `ARTIFACT_EDITED`, `AUTO_REPLAN`, `REPLAN_TIMEOUT`, `CHANGE_RECORD`, `POLICY_DENIED` |

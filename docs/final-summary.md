@@ -4,7 +4,7 @@
 A URL shortener (create, redirect, expiry, deactivation, idempotent creation, click analytics, rate limiting) and, on top of it, a
 governed agentic SDLC orchestration engine that takes a requirement through eight stages (requirements analysis, task
 decomposition, architecture, implementation plan, implementation proposal, testing, documentation, release readiness) as a
-persisted dependency graph with parallel branches and join points. Delivered in six phases, each published to GitHub only after
+persisted dependency graph with parallel branches and join points. Delivered in seven phases (the seventh closes the gaps found when comparing the result with the assignment brief), each published to GitHub only after
 its tests, security, review, performance and (from phase 4) AI-evaluation gates passed. Details: `docs/architecture.md`,
 `docs/scenarios.md`, `docs/api.md`, `docs/demo-script.md`; the reasoning behind the choices: `explanation.md`.
 

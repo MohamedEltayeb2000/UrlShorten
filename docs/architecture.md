@@ -437,3 +437,22 @@ should be verified against the merged code and OpenAPI document before relying o
 * **Optional LLM provider.** A provider selected by environment (`AGENT_PROVIDER`, `LLM_API_KEY`, `LLM_ENDPOINT`) behind the
   existing `AgentProvider` interface. It must satisfy the same `AgentResult` contract and evaluation, and it cannot bypass the
   scheduler, policy engine or approvals. If it is unavailable the mock fallback applies. Demo mode never needs it.
+
+## Phase 7 additions: gates, safe-stop, change detection and change control
+
+- **Entry and exit gates (`StageGates`).** Before a stage runs, its entry gate checks that every prerequisite succeeded and (for agent stages) has a
+  CURRENT, non-stale artifact. After it runs, the exit gate checks that the output was stored, passed evaluation and passed policy. Each result is an
+  audit event (`GATE_ENTRY_PASSED/FAILED`, `GATE_EXIT_PASSED/FAILED`) and appears in the run detail as `gates` per stage. A failed entry gate skips the stage
+  and fails the run; a failed exit gate fails the stage.
+- **Cooperative safe-stop.** `StageExecution.cancelled()` turns true when the run is paused. The agent handler checks it at the start and just before it stores
+  output; on cancellation it throws `StageInterruptedException` and the node moves RUNNING -> READY (attempt recorded as INTERRUPTED, no retry, nothing stored).
+  Resume runs it again exactly once.
+- **Automatic re-plan (`ChangeDetectionService`).** A human edit of an artifact (`PUT /api/agent-runs/{id}/artifacts`) or a rollback to a different version
+  triggers `autoReplan`: downstream artifacts become STALE, downstream stages are re-queued, the plan version is incremented, approval gates apply again, and an
+  `AUTO_REPLAN` audit event records the lineage. If downstream stages are running, the run is paused, the stages finish, then it re-plans and resumes (15 s limit).
+- **Change control.** Every approval carries a change record (risk class, change ticket, justification, proposed commands and migrations). Approving a HIGH-risk
+  change needs a ticket such as `CHG-1042` and a justification. The policy engine now evaluates the commands and migrations a stage actually proposes
+  (destructive commands and production deployments are denied and the output held).
+- **Requirement and code analysis.** `RequirementAnalysis` derives goals, constraints and ambiguity (vague terms, missing criteria, undefined references) from the
+  text; `BrownfieldAnalyzer` builds a class/endpoint/table graph from a source directory (`shortener.brownfield.path`, default the seeded fixture).
+- **Verification.** Playwright journeys run in a real browser against the real backend and frontend; PostgreSQL was exercised through Docker.
