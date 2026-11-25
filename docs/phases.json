@@ -149,7 +149,7 @@
                        "id":  "P6",
                        "name":  "Scenarios, metrics, summary",
                        "status":  "COMPLETE",
-                       "publish":  null,
+                       "publish":  "PUBLISHED",
                        "capabilities":  [
                                             "Greenfield/Brownfield/Ambiguous presets",
                                             "Metrics",
