@@ -148,7 +148,7 @@
                    {
                        "id":  "P6",
                        "name":  "Scenarios, metrics, summary",
-                       "status":  "NOT_STARTED",
+                       "status":  "COMPLETE",
                        "publish":  null,
                        "capabilities":  [
                                             "Greenfield/Brownfield/Ambiguous presets",
