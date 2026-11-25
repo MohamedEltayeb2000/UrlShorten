@@ -26,7 +26,7 @@ Get-ChildItem (Join-Path $root 'backend/target/surefire-reports') -Filter 'TEST-
 
 # ---- frontend: tag -> test files; file -> pass/fail from vitest json
 $frontTags = @{}
-Get-ChildItem (Join-Path $root 'frontend/tests') -Recurse -Include *.test.ts, *.test.tsx -ErrorAction SilentlyContinue | ForEach-Object {
+Get-ChildItem (Join-Path $root 'frontend/tests'), (Join-Path $root 'frontend/e2e') -Recurse -Include *.test.ts, *.test.tsx, *.spec.ts -ErrorAction SilentlyContinue | ForEach-Object {
     $text = Get-Content $_.FullName -Raw
     foreach ($m in [regex]::Matches($text, '@req\s+(\d{3}-FR-\d{3})')) {
         $id = $m.Groups[1].Value
@@ -39,6 +39,19 @@ $vj = Join-Path $root 'frontend/test-results.json'
 if (Test-Path $vj) {
     $j = Get-Content $vj -Raw | ConvertFrom-Json
     foreach ($tr in $j.testResults) { $fileResult[[IO.Path]::GetFileName($tr.name)] = if ($tr.status -eq 'passed') { 'PASS' } else { 'FAIL' } }
+}
+
+# Playwright (real browser) results: one entry per spec file, PASS only if every test in it passed
+$pw = Join-Path $root 'frontend/e2e/results.json'
+if (Test-Path $pw) {
+    $pj = Get-Content $pw -Raw | ConvertFrom-Json
+    function Get-SpecOk($suite) {
+        $ok = $true
+        foreach ($sp in @($suite.specs)) { if (-not $sp.ok) { $ok = $false } }
+        foreach ($child in @($suite.suites)) { if (-not (Get-SpecOk $child)) { $ok = $false } }
+        return $ok
+    }
+    foreach ($suite in @($pj.suites)) { $fileResult[[IO.Path]::GetFileName($suite.file)] = if (Get-SpecOk $suite) { 'PASS' } else { 'FAIL' } }
 }
 
 $owned = Get-OwnedRequirements -UpToPhase 7

@@ -16,6 +16,15 @@ $frontCode = $LASTEXITCODE
 Pop-Location
 if ($frontCode -ne 0) { $findings += New-Finding 'HIGH' 'Frontend tests failed' 'frontend/test-results.json' }
 
+# Real-browser journeys against the running backend and frontend (Playwright); needs ports 8080 and 5173 free.
+if ($Phase -ge 7) {
+    Push-Location (Join-Path $root 'frontend')
+    & npx playwright test 2>&1 | Out-Host
+    $e2eCode = $LASTEXITCODE
+    Pop-Location
+    if ($e2eCode -ne 0) { $findings += New-Finding 'HIGH' 'Browser end-to-end tests failed' 'frontend/e2e/results.json' }
+}
+
 $trace = & (Join-Path $PSScriptRoot 'traceability.ps1') -Phase $Phase
 foreach ($b in $trace.Blocking) {
     $findings += New-Finding 'HIGH' "Requirement $($b.Requirement) (owner $($b.Owner)) is $($b.Result)" 'docs/traceability.md'
