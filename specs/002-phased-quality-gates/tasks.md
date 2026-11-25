@@ -205,34 +205,34 @@ description: "Task list for phased delivery with quality gates"
 
 ### Tests for P4
 
-- [ ] T085 [P] [US1] `{test}/agents/AgentContractTest.java` — every mock agent returns all contract fields, labeled simulated, deterministic across two runs (`001-FR-008,009`)
-- [ ] T086 [P] [US1] `{test}/artifacts/ArtifactVersioningTest.java` — immutable versions, parent lineage, checksum, scoped context only (`001-FR-005`)
-- [ ] T087 [P] [US1] `{test}/audit/AuditTrailTest.java` — append-only (no update/delete API), correlation ID recorded (`001-FR-020`)
-- [ ] T088 [P] [US5] `{test}/evaluation/AgentOutputEvaluatorTest.java` (`@Tag("eval")`) — each of six criteria pass/fail with reason; below-threshold flagged in audit and not consumed (`002-FR-010,012`)
-- [ ] T089 [US5] `{test}/evaluation/ScenarioEvalSetTest.java` (`@Tag("eval")`) — runs `eval/greenfield.json`, `eval/brownfield.json`, `eval/ambiguous.json` ≥ threshold; `eval/degraded.json` fails; repeat run identical; criteria version recorded (`002-FR-011,013`)
-- [ ] T090 [P] [US7] `frontend/tests/ArtifactsPage.test.tsx` — version list, input references, "Proposal — not applied" label, keyboard-navigable version list (`@req 001-FR-021`, `002-FR-017`)
+- [X] T085 [P] [US1] `{test}/agents/AgentContractTest.java` — every mock agent returns all contract fields, labeled simulated, deterministic across two runs (`001-FR-008,009`)
+- [X] T086 [P] [US1] `{test}/artifacts/ArtifactVersioningTest.java` — immutable versions, parent lineage, checksum, scoped context only (`001-FR-005`)
+- [X] T087 [P] [US1] `{test}/audit/AuditTrailTest.java` — append-only (no update/delete API), correlation ID recorded (`001-FR-020`)
+- [X] T088 [P] [US5] `{test}/evaluation/AgentOutputEvaluatorTest.java` (`@Tag("eval")`) — each of six criteria pass/fail with reason; below-threshold flagged in audit and not consumed (`002-FR-010,012`)
+- [X] T089 [US5] `{test}/evaluation/ScenarioEvalSetTest.java` (`@Tag("eval")`) — runs `eval/greenfield.json`, `eval/brownfield.json`, `eval/ambiguous.json` ≥ threshold; `eval/degraded.json` fails; repeat run identical; criteria version recorded (`002-FR-011,013`)
+- [X] T090 [P] [US7] `frontend/tests/ArtifactsPage.test.tsx` — version list, input references, "Proposal — not applied" label, keyboard-navigable version list (`@req 001-FR-021`, `002-FR-017`)
 
 ### Implementation for P4
 
-- [ ] T091 [US1] Flyway `{res}/db/migration/V4__agents_artifacts_audit.sql` (stage_attempt, artifact, audit_event)
-- [ ] T092 [P] [US1] `{main}/agents/AgentResult.java`, `AgentStatus.java`, `AgentProvider.java` interface (per root plan.md §10)
-- [ ] T093 [US1] `{main}/agents/mock/` deterministic agents: `RequirementsAnalystAgent`, `PlannerAgent`, `ArchitectAgent`, `ImplementationPlanAgent`, `ImplementerAgent` (proposal only), `TestAgent`, `DocumentationAgent`, `ReleaseReadinessAgent`, plus `MockAgentProvider`
-- [ ] T094 [P] [US1] `{main}/agents/AgentStageHandler.java` bridging orchestrator `StageHandler` to agents with scoped context; replace `NoOpStageHandler` in default wiring
-- [ ] T095 [P] [US1] `{main}/artifacts/Artifact.java`, `ArtifactRepository.java`, `ArtifactService.java` (versioning, lineage, checksum)
-- [ ] T096 [P] [US1] `{main}/audit/AuditEvent.java`, `AuditRepository.java`, `AuditService.java` (insert-only), and `GET /api/agent-runs/{id}/artifacts` and `/events` in `{main}/orchestrator/RunController.java`
-- [ ] T097 [US5] `{main}/evaluation/AgentOutputEvaluator.java`, `EvaluationCriteria.java` (versioned), `EvaluationReport.java`; hook: below-threshold output flagged in audit and the stage set to `BLOCKED` (held; not consumed downstream). Release of a held output by human approval is added in P5 (T118)
-- [ ] T098 [P] [US5] Create evaluation sets `eval/greenfield.json`, `eval/brownfield.json`, `eval/ambiguous.json` (ambiguous requires non-empty openQuestions+assumptions), `eval/degraded.json` (missing field, unsafe URL, missing simulated label)
-- [ ] T099 [P] [US1] Brownfield fixture `fixtures/brownfield/` (small URL-shortener module with a missing idempotency feature) and `fixtures/brownfield/README.md` explaining the seeded defect
-- [ ] T100 [US7] `frontend/src/pages/ArtifactsPage.tsx` and route `/runs/:id/artifacts` (version list, parent/input refs, proposal label)
+- [X] T091 [US1] Flyway `{res}/db/migration/V4__agents_artifacts_audit.sql` (stage_attempt, artifact, audit_event)
+- [X] T092 [P] [US1] `{main}/agents/AgentResult.java`, `AgentStatus.java`, `AgentProvider.java` interface (per root plan.md §10)
+- [X] T093 [US1] `{main}/agents/mock/` deterministic agents: `RequirementsAnalystAgent`, `PlannerAgent`, `ArchitectAgent`, `ImplementationPlanAgent`, `ImplementerAgent` (proposal only), `TestAgent`, `DocumentationAgent`, `ReleaseReadinessAgent`, plus `MockAgentProvider`
+- [X] T094 [P] [US1] `{main}/agents/AgentStageHandler.java` bridging orchestrator `StageHandler` to agents with scoped context; replace `NoOpStageHandler` in default wiring
+- [X] T095 [P] [US1] `{main}/artifacts/Artifact.java`, `ArtifactRepository.java`, `ArtifactService.java` (versioning, lineage, checksum)
+- [X] T096 [P] [US1] `{main}/audit/AuditEvent.java`, `AuditRepository.java`, `AuditService.java` (insert-only), and `GET /api/agent-runs/{id}/artifacts` and `/events` in `{main}/orchestrator/RunController.java`
+- [X] T097 [US5] `{main}/evaluation/AgentOutputEvaluator.java`, `EvaluationCriteria.java` (versioned), `EvaluationReport.java`; hook: below-threshold output flagged in audit and the stage set to `BLOCKED` (held; not consumed downstream). Release of a held output by human approval is added in P5 (T118)
+- [X] T098 [P] [US5] Create evaluation sets `eval/greenfield.json`, `eval/brownfield.json`, `eval/ambiguous.json` (ambiguous requires non-empty openQuestions+assumptions), `eval/degraded.json` (missing field, unsafe URL, missing simulated label)
+- [X] T099 [P] [US1] Brownfield fixture `fixtures/brownfield/` (small URL-shortener module with a missing idempotency feature) and `fixtures/brownfield/README.md` explaining the seeded defect
+- [X] T100 [US7] `frontend/src/pages/ArtifactsPage.tsx` and route `/runs/:id/artifacts` (version list, parent/input refs, proposal label)
 
 ### Gate block for P4
 
-- [ ] T101 [P] [US3] `{test}/security/ArtifactSecurityTest.java` (`@Tag("security")`): secret-like strings in agent output are blocked/redacted; unsafe URL schemes in generated artifacts flagged
-- [ ] T102 [US2] Run `scripts/gate-tests.ps1 --phase 4`
+- [X] T101 [P] [US3] `{test}/security/ArtifactSecurityTest.java` (`@Tag("security")`): secret-like strings in agent output are blocked/redacted; unsafe URL schemes in generated artifacts flagged
+- [X] T102 [US2] Run `scripts/gate-tests.ps1 --phase 4`
 - [ ] T103 [US3] Run `scripts/gate-security.ps1 --phase 4`
-- [ ] T104 [US5] Run `scripts/gate-eval.ps1 --phase 4`; commit `docs/evals/phase-4.json`
-- [ ] T105 [US4] Review P4; write `docs/reviews/phase-4.md` and a timed first-use walkthrough `docs/walkthroughs/phase-4.md` (T161 template)
-- [ ] T106 [US6] Run `scripts/gate-perf.ps1 --phase 4` (full Greenfield run time within budget)
+- [X] T104 [US5] Run `scripts/gate-eval.ps1 --phase 4`; commit `docs/evals/phase-4.json`
+- [X] T105 [US4] Review P4; write `docs/reviews/phase-4.md` and a timed first-use walkthrough `docs/walkthroughs/phase-4.md` (T161 template)
+- [X] T106 [US6] Run `scripts/gate-perf.ps1 --phase 4` (full Greenfield run time within budget)
 - [ ] T107 [US8] Run `scripts/gate-all.ps1 --phase 4` then `scripts/publish-phase.ps1 4`
 
 **Checkpoint**: P4 pushed. Greenfield run produces real (simulated) artifacts, audited and evaluated.
