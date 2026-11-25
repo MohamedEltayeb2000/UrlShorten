@@ -1,6 +1,6 @@
 // @req 001-FR-021
 // @req 002-FR-017
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -132,7 +132,7 @@ describe('artifacts page', () => {
     setup({ fail: true })
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Run 9 not found')
-    expect(alert).toHaveFocus()
+    await waitFor(() => expect(alert).toHaveFocus()) // focus is moved in an effect; wait for it on a busy machine
   })
 })
 
