@@ -16,7 +16,7 @@ public class PolicyEngine {
             new TextRule("no-embedded-secrets", Pattern.compile("AKIA[0-9A-Z]{16}"), "Cloud access key detected"),
             new TextRule("no-embedded-secrets", Pattern.compile("-----BEGIN [A-Z ]*PRIVATE KEY-----"), "Private key detected"),
             new TextRule("no-embedded-secrets",
-                    Pattern.compile("(?i)(api[_-]?key|secret|password|token)\\s*[:=]\\s*\\S{8,}"),
+                    Pattern.compile("(?i)(api[_-]?key|secret|password|token)[\"']?\\s*[:=]\\s*[\"']?[^\\s\"']{8,}"),
                     "Credential-like assignment detected"),
             new TextRule("no-unsafe-url-schemes", Pattern.compile("(?i)(javascript|vbscript):"), "Unsafe URL scheme detected"),
             new TextRule("no-unsafe-url-schemes", Pattern.compile("(?i)data:text/html"), "Unsafe URL scheme detected"),
