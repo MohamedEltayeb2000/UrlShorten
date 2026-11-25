@@ -1,0 +1,567 @@
+{
+  "criteriaVersion" : "1.0",
+  "passThreshold" : 1.0,
+  "scenarios" : [ {
+    "criteriaVersion" : "1.0",
+    "passThreshold" : 1.0,
+    "scenario" : "GREENFIELD",
+    "evaluations" : [ {
+      "stageId" : "REQUIREMENTS_ANALYSIS",
+      "agentName" : "RequirementsAnalyst",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for REQUIREMENTS_ANALYSIS"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "TASK_DECOMPOSITION",
+      "agentName" : "TaskDecomposer",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for TASK_DECOMPOSITION"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "ARCHITECTURE_DESIGN",
+      "agentName" : "ArchitectureDesigner",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for ARCHITECTURE_DESIGN"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "IMPLEMENTATION_PLAN",
+      "agentName" : "ImplementationPlanner",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for IMPLEMENTATION_PLAN"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "IMPLEMENTATION",
+      "agentName" : "ImplementationProposer",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for IMPLEMENTATION"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "TESTING",
+      "agentName" : "TestPlanner",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for TESTING"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "DOCUMENTATION",
+      "agentName" : "DocumentationWriter",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for DOCUMENTATION"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "RELEASE_READINESS",
+      "agentName" : "ReleaseReadinessReviewer",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for RELEASE_READINESS"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    } ],
+    "overallScore" : 1.0,
+    "passed" : true
+  }, {
+    "criteriaVersion" : "1.0",
+    "passThreshold" : 1.0,
+    "scenario" : "BROWNFIELD",
+    "evaluations" : [ {
+      "stageId" : "REQUIREMENTS_ANALYSIS",
+      "agentName" : "RequirementsAnalyst",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for REQUIREMENTS_ANALYSIS"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "TASK_DECOMPOSITION",
+      "agentName" : "TaskDecomposer",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for TASK_DECOMPOSITION"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "ARCHITECTURE_DESIGN",
+      "agentName" : "ArchitectureDesigner",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for ARCHITECTURE_DESIGN"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "IMPLEMENTATION_PLAN",
+      "agentName" : "ImplementationPlanner",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for IMPLEMENTATION_PLAN"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "IMPLEMENTATION",
+      "agentName" : "ImplementationProposer",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for IMPLEMENTATION"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "TESTING",
+      "agentName" : "TestPlanner",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for TESTING"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "DOCUMENTATION",
+      "agentName" : "DocumentationWriter",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for DOCUMENTATION"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "RELEASE_READINESS",
+      "agentName" : "ReleaseReadinessReviewer",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for RELEASE_READINESS"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    } ],
+    "overallScore" : 1.0,
+    "passed" : true
+  }, {
+    "criteriaVersion" : "1.0",
+    "passThreshold" : 1.0,
+    "scenario" : "AMBIGUOUS",
+    "evaluations" : [ {
+      "stageId" : "REQUIREMENTS_ANALYSIS",
+      "agentName" : "RequirementsAnalyst",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for REQUIREMENTS_ANALYSIS"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "stageId" : "TASK_DECOMPOSITION",
+      "agentName" : "TaskDecomposer",
+      "results" : [ {
+        "id" : "schema_valid",
+        "passed" : true,
+        "reason" : "all contract fields valid"
+      }, {
+        "id" : "stage_complete",
+        "passed" : true,
+        "reason" : "required sections present for TASK_DECOMPOSITION"
+      }, {
+        "id" : "upstream_consistent",
+        "passed" : true,
+        "reason" : "references match upstream outputs"
+      }, {
+        "id" : "no_unsafe_content",
+        "passed" : true,
+        "reason" : "no secrets, unsafe URLs, destructive or deploy actions"
+      }, {
+        "id" : "labeled_simulated",
+        "passed" : true,
+        "reason" : "simulation labeling correct"
+      }, {
+        "id" : "deterministic",
+        "passed" : true,
+        "reason" : "identical across two runs"
+      } ],
+      "score" : 1.0,
+      "passed" : true
+    } ],
+    "overallScore" : 1.0,
+    "passed" : true
+  } ],
+  "degradedCaughtAll" : true
+}

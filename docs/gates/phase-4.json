@@ -1,0 +1,46 @@
+﻿{
+    "phase":  4,
+    "gates":  {
+                  "TESTS":  {
+                                "outcome":  "PASS",
+                                "findings":  [
+
+                                             ],
+                                "timestamp":  "2026-11-25T00:05:43.4455371Z",
+                                "requirementsTotal":  50,
+                                "requirementsPassing":  41
+                            },
+                  "SECURITY":  {
+                                   "outcome":  "PASS",
+                                   "findings":  [
+
+                                                ],
+                                   "timestamp":  "2026-11-25T00:07:11.5024941Z",
+                                   "toolVersions":  {
+                                                        "gitleaks":  "8.30.1",
+                                                        "gitleaksSelfTest":  "detected-planted-key"
+                                                    }
+                               },
+                  "REVIEW":  {
+                                 "outcome":  "PASS",
+                                 "findings":  [
+
+                                              ],
+                                 "timestamp":  "2026-11-25T00:07:12.4187554Z"
+                             },
+                  "PERF":  {
+                               "outcome":  "PASS",
+                               "findings":  [
+
+                                            ],
+                               "timestamp":  "2026-11-25T00:08:05.1961832Z"
+                           },
+                  "EVAL":  {
+                               "outcome":  "PASS",
+                               "findings":  [
+
+                                            ],
+                               "timestamp":  "2026-11-25T00:08:18.4123686Z"
+                           }
+              }
+}
