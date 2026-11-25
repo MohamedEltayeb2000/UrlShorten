@@ -40,6 +40,7 @@ export default function RunDetailPanel({ run, busy, onStart, onPause, onRetry, o
         <button type="button" onClick={onPause} disabled={!canPause || busy}>
           Pause
         </button>
+        <Link to={`/runs/${run.id}/artifacts`}>View artifacts and audit trail</Link>
         <Link to={`/metrics?run=${run.id}`}>View metrics</Link>
         <button type="button" onClick={() => void exportSummary()}>
           Download engineering summary
