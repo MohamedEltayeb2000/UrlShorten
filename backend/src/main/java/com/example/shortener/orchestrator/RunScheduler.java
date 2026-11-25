@@ -227,11 +227,11 @@ public class RunScheduler {
                     if (load(runId).getStatus() != RunStatus.RUNNING) return; // paused: stays READY until resumed
                     StageGates.GateResult entry = gates.entry(runId, nodes.findById(nodeDbId).orElseThrow().getNodeId());
                     if (!entry.passed()) { // entry gate failed: never RUNNING, treated like a failed prerequisite
-                        ran = true;
                         transitions.move(nodeDbId, NodeStatus.SKIPPED, "entry gate failed: " + entry.firstFailure(), n -> {
                             n.setErrorCode(GATE_ENTRY_FAILED);
                             n.setErrorSummary("Entry gate failed: " + entry.firstFailure());
                         });
+                        scheduleLocked(runId); // skip the downstream stages and settle the run
                         return;
                     }
                     RunNode started = transitions.move(nodeDbId, NodeStatus.RUNNING, "started", n -> {
