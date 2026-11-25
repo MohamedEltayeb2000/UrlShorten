@@ -7,6 +7,8 @@ AI-evaluation) gates before it is published. See `specs/002-phased-quality-gates
 
 **Demo mode needs no AI API key.** Agents are deterministic mocks by default.
 
+**For reviewers:** start with [`docs/evaluation-guide.md`](docs/evaluation-guide.md) (maps each assessment criterion to its evidence and explains how AI output is evaluated), then [`explanation.md`](explanation.md) and [`docs/architecture.md`](docs/architecture.md).
+
 ## Prerequisites
 - JDK 21+ (built and tested on JDK 25), Maven 3.9+
 - Node 20+ (tested on Node 24), npm
