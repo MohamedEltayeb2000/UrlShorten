@@ -18,10 +18,10 @@ class NodeStateMachineTest {
             "RUNNING>SUCCEEDED", "RUNNING>FAILED", "RUNNING>RETRYING", "RUNNING>WAITING_FOR_APPROVAL",
             "RUNNING>BLOCKED", "RUNNING>CANCELLED",
             "RETRYING>RUNNING", "RETRYING>FAILED", "RETRYING>CANCELLED",
-            "WAITING_FOR_APPROVAL>SUCCEEDED", "WAITING_FOR_APPROVAL>BLOCKED", "WAITING_FOR_APPROVAL>CANCELLED",
-            "BLOCKED>READY", "BLOCKED>SKIPPED", "BLOCKED>CANCELLED",
+            "WAITING_FOR_APPROVAL>SUCCEEDED", "WAITING_FOR_APPROVAL>BLOCKED", "WAITING_FOR_APPROVAL>PENDING", "WAITING_FOR_APPROVAL>CANCELLED",
+            "BLOCKED>READY", "BLOCKED>SKIPPED", "BLOCKED>PENDING", "BLOCKED>CANCELLED",
             "FAILED>RETRYING", "FAILED>PENDING", "FAILED>CANCELLED",
-            "SUCCEEDED>PENDING");
+            "SUCCEEDED>PENDING", "SKIPPED>PENDING");
 
     @Test
     void allHundredPairsMatchExpectedTable() {
@@ -61,9 +61,9 @@ class NodeStateMachineTest {
     }
 
     @Test
-    void cancelledAndSkippedAreTerminalWithNoOutgoingTransitions() {
+    void cancelledIsTerminalAndSkippedCanOnlyBeRequeued() {
         assertThat(NodeStateMachine.allowedFrom(CANCELLED)).isEmpty();
-        assertThat(NodeStateMachine.allowedFrom(SKIPPED)).isEmpty();
+        assertThat(NodeStateMachine.allowedFrom(SKIPPED)).containsExactly(PENDING);
     }
 
     @Test

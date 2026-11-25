@@ -17,14 +17,15 @@ public final class NodeStateMachine {
         TABLE.put(RUNNING, Set.of(SUCCEEDED, FAILED, RETRYING, WAITING_FOR_APPROVAL, BLOCKED, CANCELLED));
         TABLE.put(RETRYING, Set.of(RUNNING, FAILED, CANCELLED));
         // BLOCKED here means rejected by a human.
-        TABLE.put(WAITING_FOR_APPROVAL, Set.of(SUCCEEDED, BLOCKED, CANCELLED));
-        TABLE.put(BLOCKED, Set.of(READY, SKIPPED, CANCELLED));
+        TABLE.put(WAITING_FOR_APPROVAL, Set.of(SUCCEEDED, BLOCKED, PENDING, CANCELLED)); // PENDING = re-queued by a re-plan
+        TABLE.put(BLOCKED, Set.of(READY, SKIPPED, PENDING, CANCELLED)); // PENDING = re-queued by a re-plan
         // RETRYING = manual retry; PENDING = re-queue after re-plan.
         TABLE.put(FAILED, Set.of(RETRYING, PENDING, CANCELLED));
         // Re-queue when an upstream change makes the result stale.
         TABLE.put(SUCCEEDED, Set.of(PENDING));
         TABLE.put(CANCELLED, Set.of());
-        TABLE.put(SKIPPED, Set.of());
+        // A skipped stage is re-queued when a retry or re-plan makes it runnable again.
+        TABLE.put(SKIPPED, Set.of(PENDING));
     }
 
     private NodeStateMachine() {}

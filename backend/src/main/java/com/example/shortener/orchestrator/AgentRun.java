@@ -51,6 +51,11 @@ public class AgentRun {
     public String getWorkflowName() { return workflowName; }
     public String getScenarioType() { return scenarioType; }
     public String getRawRequirement() { return rawRequirement; }
+    /** Replaces the requirement (a re-plan with a changed requirement). */
+    public void setRequirement(String raw, String normalized) {
+        this.rawRequirement = raw;
+        this.normalizedRequirement = normalized;
+    }
     public String getNormalizedRequirement() { return normalizedRequirement; }
     public RunStatus getStatus() { return status; }
     public void setStatus(RunStatus status) { this.status = status; }
