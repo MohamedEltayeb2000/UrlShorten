@@ -41,8 +41,11 @@ public class RunService {
     /** Creates a run for a registered workflow (graph validated at registration) with every node PENDING. */
     @Transactional
     public RunDtos.RunDetail create(String requirement, String scenario, String workflowName) {
-        String req = validateRequirement(requirement);
         String sc = validateScenario(scenario);
+        // A scenario launched without its own requirement uses the seeded preset requirement.
+        String req = (requirement == null || requirement.isBlank()) && sc != null
+                ? ScenarioPresets.byId(sc).requirement()
+                : validateRequirement(requirement);
         WorkflowDefinition def = workflows.get(workflowName);
         AgentRun run = runs.save(new AgentRun(def.name(), sc, req, req.replaceAll("\\s+", " ")));
         run.setStatus(RunStatus.CREATED);
