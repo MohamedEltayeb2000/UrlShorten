@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 /** JDBC access to the links table. */
+@Repository
 public class LinkRepository {
 
     private final DataSource dataSource;

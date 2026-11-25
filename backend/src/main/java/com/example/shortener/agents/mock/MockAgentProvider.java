@@ -10,7 +10,7 @@ public class MockAgentProvider implements AgentProvider {
     private final List<Agent> agents;
 
     public MockAgentProvider() {
-        this(new BrownfieldAnalyzer());
+        this(BrownfieldAnalyzer.fromConfiguredPath());
     }
 
     public MockAgentProvider(BrownfieldAnalyzer analyzer) {

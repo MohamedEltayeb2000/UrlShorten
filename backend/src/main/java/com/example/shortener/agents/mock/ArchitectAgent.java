@@ -48,7 +48,7 @@ public class ArchitectAgent extends BaseMockAgent {
         Map<String, Object> out = map("components", components, "decisions", decisions, "dataFlow", dataFlow);
         List<String> risks = new ArrayList<>(List.of("MEDIUM: a single database may become the bottleneck at high volume"));
         if (isScenario(in, BROWNFIELD)) {
-            BrownfieldAnalyzer.Analysis a = analyzer.analyze();
+            BrownfieldAnalyzer.Analysis a = analyzer.analyze(topic(in));
             dataFlow.clear();
             dataFlow.addAll(a.dataFlow());
             decisions.add("Add idempotency to link creation using an Idempotency-Key header and a unique key");

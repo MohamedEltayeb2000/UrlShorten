@@ -3,6 +3,7 @@ package demo;
 import java.security.SecureRandom;
 
 /** Business logic for short links. */
+@Service
 public class LinkService {
 
     private static final String ALPHABET = "abcdefghijkmnpqrstuvwxyz23456789";
