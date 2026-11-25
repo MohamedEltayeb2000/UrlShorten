@@ -1,6 +1,6 @@
 # Regenerates docs/traceability.md from @Requirement / @req tags and the latest test reports.
 # Usage: scripts/traceability.ps1 -Phase N   (returns a result object; also writes docs/traceability.md)
-param([int]$Phase = 6)
+param([int]$Phase = 7)
 . "$PSScriptRoot/lib.ps1"
 $root = Get-Root
 
@@ -41,7 +41,7 @@ if (Test-Path $vj) {
     foreach ($tr in $j.testResults) { $fileResult[[IO.Path]::GetFileName($tr.name)] = if ($tr.status -eq 'passed') { 'PASS' } else { 'FAIL' } }
 }
 
-$owned = Get-OwnedRequirements -UpToPhase 6
+$owned = Get-OwnedRequirements -UpToPhase 7
 $rows = @()
 $allIds = @($owned.Keys) | Sort-Object
 foreach ($id in $allIds) {

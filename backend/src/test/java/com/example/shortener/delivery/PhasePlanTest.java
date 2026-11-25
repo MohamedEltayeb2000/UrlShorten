@@ -27,9 +27,9 @@ class PhasePlanTest {
     }
 
     @Test
-    void definesOrderedPhasesP1ToP6WithCapabilitiesRequirementsAndExitCriteria() {
-        assertEquals(6, phases.size());
-        for (int i = 0; i < 6; i++) {
+    void definesOrderedPhasesP1ToP7WithCapabilitiesRequirementsAndExitCriteria() {
+        assertEquals(7, phases.size());
+        for (int i = 0; i < 7; i++) {
             JsonNode p = phases.get(i);
             assertEquals("P" + (i + 1), p.get("id").asText());
             assertTrue(p.get("capabilities").size() > 0, p.get("id") + " needs capabilities");
@@ -44,9 +44,9 @@ class PhasePlanTest {
         for (JsonNode p : phases) {
             for (JsonNode r : p.get("requirements")) owners.merge(r.asText(), 1, Integer::sum);
         }
-        for (int i = 1; i <= 30; i++) assertOwned(owners, String.format("001-FR-%03d", i));
+        for (int i = 1; i <= 37; i++) assertOwned(owners, String.format("001-FR-%03d", i));
         for (int i = 1; i <= 20; i++) assertOwned(owners, String.format("002-FR-%03d", i));
-        assertEquals(50, owners.size(), "no unknown requirement IDs");
+        assertEquals(57, owners.size(), "no unknown requirement IDs");
     }
 
     private static void assertOwned(Map<String, Integer> owners, String id) {

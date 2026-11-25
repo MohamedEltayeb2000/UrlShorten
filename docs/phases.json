@@ -1,175 +1,204 @@
-﻿{
-    "_comment":  "Generated from specs/002-phased-quality-gates/plan.md ownership table. status: NOT_STARTED|IN_PROGRESS|GATES_RUNNING|COMPLETE|BLOCKED; publish: PUBLISHED|PUBLISH_PENDING|null",
-    "phases":  [
-                   {
-                       "id":  "P1",
-                       "name":  "Shortener core",
-                       "status":  "COMPLETE",
-                       "publish":  "PUBLISHED",
-                       "capabilities":  [
-                                            "Create short link",
-                                            "Redirect",
-                                            "URL/alias validation",
-                                            "Error model + request IDs",
-                                            "Health + OpenAPI",
-                                            "Shorten form + link list"
-                                        ],
-                       "requirements":  [
-                                            "001-FR-023",
-                                            "001-FR-024",
-                                            "001-FR-029",
-                                            "002-FR-001",
-                                            "002-FR-002",
-                                            "002-FR-003",
-                                            "002-FR-004",
-                                            "002-FR-005",
-                                            "002-FR-006",
-                                            "002-FR-007",
-                                            "002-FR-008",
-                                            "002-FR-009",
-                                            "002-FR-014",
-                                            "002-FR-016",
-                                            "002-FR-017",
-                                            "002-FR-018",
-                                            "002-FR-019",
-                                            "002-FR-020"
-                                        ],
-                       "exitCriteria":  [
-                                            "Shorten + redirect works from the UI",
-                                            "Hostile inputs rejected",
-                                            "All owned requirements have passing tagged tests",
-                                            "All gates PASS"
-                                        ]
-                   },
-                   {
-                       "id":  "P2",
-                       "name":  "Hardening and analytics",
-                       "status":  "COMPLETE",
-                       "publish":  "PUBLISHED",
-                       "capabilities":  [
-                                            "Expiry",
-                                            "Deactivate",
-                                            "Click tracking + analytics",
-                                            "Idempotency",
-                                            "Collision retry",
-                                            "Rate limiting"
-                                        ],
-                       "requirements":  [
-                                            "001-FR-025",
-                                            "001-FR-026",
-                                            "001-FR-027",
-                                            "001-FR-028"
-                                        ],
-                       "exitCriteria":  [
-                                            "Clicks counted",
-                                            "Idempotent create",
-                                            "429 on abuse"
-                                        ]
-                   },
-                   {
-                       "id":  "P3",
-                       "name":  "Orchestration core",
-                       "status":  "COMPLETE",
-                       "publish":  "PUBLISHED",
-                       "capabilities":  [
-                                            "Graph definition + validation",
-                                            "State machine",
-                                            "Scheduler (parallel + join)",
-                                            "Persistence + recovery",
-                                            "Start/pause"
-                                        ],
-                       "requirements":  [
-                                            "001-FR-001",
-                                            "001-FR-002",
-                                            "001-FR-003",
-                                            "001-FR-004",
-                                            "001-FR-006",
-                                            "001-FR-007",
-                                            "002-FR-015"
-                                        ],
-                       "exitCriteria":  [
-                                            "Independent stages run concurrently",
-                                            "Join waits for all prerequisites"
-                                        ]
-                   },
-                   {
-                       "id":  "P4",
-                       "name":  "Agents, artifacts, audit, evaluation",
-                       "status":  "COMPLETE",
-                       "publish":  "PUBLISHED",
-                       "capabilities":  [
-                                            "Agent contract + mock agents",
-                                            "Versioned artifacts",
-                                            "Audit trail",
-                                            "AI evaluator + eval sets"
-                                        ],
-                       "requirements":  [
-                                            "001-FR-005",
-                                            "001-FR-008",
-                                            "001-FR-009",
-                                            "002-FR-010",
-                                            "002-FR-011",
-                                            "002-FR-012",
-                                            "002-FR-013"
-                                        ],
-                       "exitCriteria":  [
-                                            "Greenfield produces artifacts",
-                                            "Evaluation \u003e= threshold; degraded set fails"
-                                        ]
-                   },
-                   {
-                       "id":  "P5",
-                       "name":  "Governance and resilience",
-                       "status":  "COMPLETE",
-                       "publish":  "PUBLISHED",
-                       "capabilities":  [
-                                            "Policy engine",
-                                            "Approvals + actor identity",
-                                            "Retry + fallback",
-                                            "Rollback",
-                                            "Re-plan + stale propagation"
-                                        ],
-                       "requirements":  [
-                                            "001-FR-011",
-                                            "001-FR-012",
-                                            "001-FR-013",
-                                            "001-FR-014",
-                                            "001-FR-015",
-                                            "001-FR-016",
-                                            "001-FR-017",
-                                            "001-FR-019"
-                                        ],
-                       "exitCriteria":  [
-                                            "Approval gates block",
-                                            "Rollback keeps history",
-                                            "Re-plan stales only dependents"
-                                        ]
-                   },
-                   {
-                       "id":  "P6",
-                       "name":  "Scenarios, metrics, summary",
-                       "status":  "COMPLETE",
-                       "publish":  "PUBLISHED",
-                       "capabilities":  [
-                                            "Greenfield/Brownfield/Ambiguous presets",
-                                            "Metrics",
-                                            "Engineering summary",
-                                            "Documentation",
-                                            "Optional LLM provider"
-                                        ],
-                       "requirements":  [
-                                            "001-FR-010",
-                                            "001-FR-018",
-                                            "001-FR-020",
-                                            "001-FR-021",
-                                            "001-FR-022",
-                                            "001-FR-030"
-                                        ],
-                       "exitCriteria":  [
-                                            "All scenarios repeatable",
-                                            "Metrics match audit events",
-                                            "Docs complete"
-                                        ]
-                   }
-               ]
+{
+  "_comment": "Generated from specs/002-phased-quality-gates/plan.md ownership table. status: NOT_STARTED|IN_PROGRESS|GATES_RUNNING|COMPLETE|BLOCKED; publish: PUBLISHED|PUBLISH_PENDING|null",
+  "phases": [
+    {
+      "id": "P1",
+      "name": "Shortener core",
+      "status": "COMPLETE",
+      "publish": "PUBLISHED",
+      "capabilities": [
+        "Create short link",
+        "Redirect",
+        "URL/alias validation",
+        "Error model + request IDs",
+        "Health + OpenAPI",
+        "Shorten form + link list"
+      ],
+      "requirements": [
+        "001-FR-023",
+        "001-FR-024",
+        "001-FR-029",
+        "002-FR-001",
+        "002-FR-002",
+        "002-FR-003",
+        "002-FR-004",
+        "002-FR-005",
+        "002-FR-006",
+        "002-FR-007",
+        "002-FR-008",
+        "002-FR-009",
+        "002-FR-014",
+        "002-FR-016",
+        "002-FR-017",
+        "002-FR-018",
+        "002-FR-019",
+        "002-FR-020"
+      ],
+      "exitCriteria": [
+        "Shorten + redirect works from the UI",
+        "Hostile inputs rejected",
+        "All owned requirements have passing tagged tests",
+        "All gates PASS"
+      ]
+    },
+    {
+      "id": "P2",
+      "name": "Hardening and analytics",
+      "status": "COMPLETE",
+      "publish": "PUBLISHED",
+      "capabilities": [
+        "Expiry",
+        "Deactivate",
+        "Click tracking + analytics",
+        "Idempotency",
+        "Collision retry",
+        "Rate limiting"
+      ],
+      "requirements": [
+        "001-FR-025",
+        "001-FR-026",
+        "001-FR-027",
+        "001-FR-028"
+      ],
+      "exitCriteria": [
+        "Clicks counted",
+        "Idempotent create",
+        "429 on abuse"
+      ]
+    },
+    {
+      "id": "P3",
+      "name": "Orchestration core",
+      "status": "COMPLETE",
+      "publish": "PUBLISHED",
+      "capabilities": [
+        "Graph definition + validation",
+        "State machine",
+        "Scheduler (parallel + join)",
+        "Persistence + recovery",
+        "Start/pause"
+      ],
+      "requirements": [
+        "001-FR-001",
+        "001-FR-002",
+        "001-FR-003",
+        "001-FR-004",
+        "001-FR-006",
+        "001-FR-007",
+        "002-FR-015"
+      ],
+      "exitCriteria": [
+        "Independent stages run concurrently",
+        "Join waits for all prerequisites"
+      ]
+    },
+    {
+      "id": "P4",
+      "name": "Agents, artifacts, audit, evaluation",
+      "status": "COMPLETE",
+      "publish": "PUBLISHED",
+      "capabilities": [
+        "Agent contract + mock agents",
+        "Versioned artifacts",
+        "Audit trail",
+        "AI evaluator + eval sets"
+      ],
+      "requirements": [
+        "001-FR-005",
+        "001-FR-008",
+        "001-FR-009",
+        "002-FR-010",
+        "002-FR-011",
+        "002-FR-012",
+        "002-FR-013"
+      ],
+      "exitCriteria": [
+        "Greenfield produces artifacts",
+        "Evaluation >= threshold; degraded set fails"
+      ]
+    },
+    {
+      "id": "P5",
+      "name": "Governance and resilience",
+      "status": "COMPLETE",
+      "publish": "PUBLISHED",
+      "capabilities": [
+        "Policy engine",
+        "Approvals + actor identity",
+        "Retry + fallback",
+        "Rollback",
+        "Re-plan + stale propagation"
+      ],
+      "requirements": [
+        "001-FR-011",
+        "001-FR-012",
+        "001-FR-013",
+        "001-FR-014",
+        "001-FR-015",
+        "001-FR-016",
+        "001-FR-017",
+        "001-FR-019"
+      ],
+      "exitCriteria": [
+        "Approval gates block",
+        "Rollback keeps history",
+        "Re-plan stales only dependents"
+      ]
+    },
+    {
+      "id": "P6",
+      "name": "Scenarios, metrics, summary",
+      "status": "COMPLETE",
+      "publish": "PUBLISHED",
+      "capabilities": [
+        "Greenfield/Brownfield/Ambiguous presets",
+        "Metrics",
+        "Engineering summary",
+        "Documentation",
+        "Optional LLM provider"
+      ],
+      "requirements": [
+        "001-FR-010",
+        "001-FR-018",
+        "001-FR-020",
+        "001-FR-021",
+        "001-FR-022",
+        "001-FR-030"
+      ],
+      "exitCriteria": [
+        "All scenarios repeatable",
+        "Metrics match audit events",
+        "Docs complete"
+      ]
+    },
+    {
+      "id": "P7",
+      "name": "Brief conformance",
+      "status": "NOT_STARTED",
+      "publish": null,
+      "capabilities": [
+        "Entry/exit gates",
+        "Automatic re-plan on upstream change",
+        "Change control and firing policy rules",
+        "Cooperative safe-stop",
+        "Text-driven requirement analysis",
+        "Structural brownfield analysis",
+        "Browser end-to-end verification"
+      ],
+      "requirements": [
+        "001-FR-031",
+        "001-FR-032",
+        "001-FR-033",
+        "001-FR-034",
+        "001-FR-035",
+        "001-FR-036",
+        "001-FR-037"
+      ],
+      "exitCriteria": [
+        "Every brief requirement has a tagged passing test",
+        "Browser end-to-end journeys pass",
+        "All gates PASS"
+      ]
+    }
+  ]
 }
