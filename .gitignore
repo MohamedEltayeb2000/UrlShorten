@@ -19,3 +19,7 @@ backend/.mvn/
 .opencode/
 .claude/settings.local.json
 .claude/worktrees/
+
+frontend/e2e/results.json
+frontend/test-results/
+frontend/playwright-report/
