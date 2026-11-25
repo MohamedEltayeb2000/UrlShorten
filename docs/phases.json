@@ -120,7 +120,7 @@
                    {
                        "id":  "P5",
                        "name":  "Governance and resilience",
-                       "status":  "NOT_STARTED",
+                       "status":  "COMPLETE",
                        "publish":  null,
                        "capabilities":  [
                                             "Policy engine",
