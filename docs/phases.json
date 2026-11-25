@@ -95,7 +95,7 @@
                    {
                        "id":  "P4",
                        "name":  "Agents, artifacts, audit, evaluation",
-                       "status":  "NOT_STARTED",
+                       "status":  "BLOCKED",
                        "publish":  null,
                        "capabilities":  [
                                             "Agent contract + mock agents",
