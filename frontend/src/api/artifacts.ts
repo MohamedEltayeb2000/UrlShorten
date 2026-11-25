@@ -33,6 +33,17 @@ export const listArtifacts = (runId: string) =>
 export const listEvents = (runId: string, page = 0, size = 10) =>
   http<Page<AuditEventView>>(`/api/agent-runs/${encodeURIComponent(runId)}/events?page=${page}&size=${size}`)
 
+export const editArtifact = (
+  runId: string,
+  body: { nodeId: string; artifactType: string; content: string; comment: string },
+  user = 'demo-user',
+) =>
+  http<ArtifactView>(`/api/agent-runs/${encodeURIComponent(runId)}/artifacts`, {
+    method: 'PUT',
+    headers: { 'X-Demo-User': user.trim() || 'demo-user' },
+    body: JSON.stringify(body),
+  })
+
 export const rollbackArtifact = (runId: string, nodeId: string, artifactType: string, version: number) =>
   http<ArtifactView>(`/api/agent-runs/${encodeURIComponent(runId)}/rollback`, {
     method: 'POST',
