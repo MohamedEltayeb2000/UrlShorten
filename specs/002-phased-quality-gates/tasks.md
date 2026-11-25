@@ -259,7 +259,7 @@ description: "Task list for phased delivery with quality gates"
 
 - [X] T115 [US1] Flyway `{res}/db/migration/V5__governance.sql` (approval, policy_decision, artifact status/plan_version columns)
 - [X] T116 [P] [US1] `{main}/governance/PolicyEngine.java`, `PolicyDecision.java`, `PolicyRules.java` (the six minimum policies)
-- [ ] T156 [US1] Actor identity model (do before T117, after T115): `{main}/governance/Actor.java` (type `HUMAN`/`AGENT`, id), demo-user resolution from the `X-Demo-User` header, default `demo-user`, always `HUMAN` (agent actors get 403) in `{main}/governance/ActorResolver.java`; agent actors can never be approvers; approval and audit records store the actor (`001-FR-012`; extend T109 to assert it)
+- [X] T156 [US1] Actor identity model (do before T117, after T115): `{main}/governance/Actor.java` (type `HUMAN`/`AGENT`, id), demo-user resolution from the `X-Demo-User` header, default `demo-user`, always `HUMAN` (agent actors get 403) in `{main}/governance/ActorResolver.java`; agent actors can never be approvers; approval and audit records store the actor (`001-FR-012`; extend T109 to assert it)
 - [X] T117 [P] [US1] `{main}/governance/Approval.java`, `ApprovalService.java`, `ApprovalController.java` (`POST /api/agent-runs/{id}/approvals`)
 - [X] T118 [US1] Add `WAITING_FOR_APPROVAL`/`BLOCKED`/`RETRYING` handling to `{main}/orchestrator/Scheduler.java`; approval-gated stages (implementation apply, release readiness), and release of an evaluation-held (`BLOCKED`) output only through a recorded human approval
 - [X] T119 [P] [US1] `{main}/orchestrator/RetryPolicy.java`, `TransientFailureException.java`, fallback to mock provider; seeded failure injector `{main}/orchestrator/FailureInjector.java` (config-driven for demo)
@@ -290,24 +290,24 @@ description: "Task list for phased delivery with quality gates"
 
 ### Tests for P6
 
-- [ ] T131 [P] [US1] `{test}/scenarios/GreenfieldScenarioIT.java` — reaches release readiness through approvals; runs the scenario 3 times and asserts identical stages, outcomes and approval prompts (001 SC-002) (`001-FR-018`)
-- [ ] T132 [P] [US1] `{test}/scenarios/BrownfieldScenarioIT.java` — impacted fixture files, data flow, idempotency proposal, compatibility risks (`001-FR-018`)
-- [ ] T133 [P] [US1] `{test}/scenarios/AmbiguousScenarioIT.java` — clarification-needed pause, open questions/assumptions, resumes only after human decision (`001-FR-019`)
-- [ ] T134 [P] [US1] `{test}/scenarios/ProviderUnavailableIT.java` — mock fallback completes a run (`001-FR-010`)
-- [ ] T135 [P] [US1] `{test}/metrics/MetricsServiceTest.java` — success rate, retries, rollbacks, durations, stage latency, failed/blocked counts equal audit events (`001-FR-020`)
-- [ ] T136 [P] [US1] `{test}/summary/EngineeringSummaryTest.java` — summary contains plan, rationale, artifacts, assumptions, risks, validation results, limitations (`001-FR-022`)
-- [ ] T137 [P] [US7] `frontend/tests/MetricsPage.test.tsx` — metrics, scenario buttons, summary download, accessible table/headings (`@req 001-FR-021,022`, `002-FR-017`)
+- [X] T131 [P] [US1] `{test}/scenarios/GreenfieldScenarioIT.java` — reaches release readiness through approvals; runs the scenario 3 times and asserts identical stages, outcomes and approval prompts (001 SC-002) (`001-FR-018`)
+- [X] T132 [P] [US1] `{test}/scenarios/BrownfieldScenarioIT.java` — impacted fixture files, data flow, idempotency proposal, compatibility risks (`001-FR-018`)
+- [X] T133 [P] [US1] `{test}/scenarios/AmbiguousScenarioIT.java` — clarification-needed pause, open questions/assumptions, resumes only after human decision (`001-FR-019`)
+- [X] T134 [P] [US1] `{test}/scenarios/ProviderUnavailableIT.java` — mock fallback completes a run (`001-FR-010`)
+- [X] T135 [P] [US1] `{test}/metrics/MetricsServiceTest.java` — success rate, retries, rollbacks, durations, stage latency, failed/blocked counts equal audit events (`001-FR-020`)
+- [X] T136 [P] [US1] `{test}/summary/EngineeringSummaryTest.java` — summary contains plan, rationale, artifacts, assumptions, risks, validation results, limitations (`001-FR-022`)
+- [X] T137 [P] [US7] `frontend/tests/MetricsPage.test.tsx` — metrics, scenario buttons, summary download, accessible table/headings (`@req 001-FR-021,022`, `002-FR-017`)
 
 ### Implementation for P6
 
-- [ ] T164 [P] [US2] `{test}/delivery/DeliverablesTest.java` (`@Requirement("001-FR-030")`): `README.md` has prerequisites, copy-paste start commands and the no-API-key demo mode; `.env.example` and `docker-compose.yml` exist and `.env.example` contains no real secrets; `docs/architecture.md`, `docs/risks-and-tradeoffs.md`, `docs/demo-script.md`, `docs/api.md`, `docs/scenarios.md` exist and are non-empty; backend and frontend test directories contain tests; `docs/demo-script.md` covers all three scenarios, approval, retry, safe-stop, re-plan, rollback, metrics and link creation (write first; it fails until T143 is done)
-- [ ] T138 [US1] `{main}/scenarios/ScenarioPreset.java`, `ScenarioService.java` with seeded requirements for Greenfield/Brownfield/Ambiguous and `POST /api/agent-runs` `scenario` parameter
-- [ ] T139 [P] [US1] Brownfield analysis in `{main}/agents/mock/BrownfieldAnalyzer.java` grounded in `fixtures/brownfield/`; ambiguity handling (`NEEDS_CLARIFICATION`) in `RequirementsAnalystAgent`
-- [ ] T140 [P] [US1] `{main}/metrics/MetricsService.java`, `MetricsController.java` (`/api/agent-runs/{id}/metrics`, `/api/metrics`) derived from audit/attempt data
-- [ ] T141 [P] [US1] `{main}/summary/EngineeringSummaryService.java` + `GET /api/agent-runs/{id}/summary` (markdown export, stored as artifact)
-- [ ] T157 [P] [US1] Optional provider (`001-FR-010`, constitution III): `{main}/agents/llm/LlmAgentProvider.java` configured only via env (`AGENT_PROVIDER`, `LLM_API_KEY`, `LLM_ENDPOINT`), validates responses against the agent contract and the evaluator, falls back to mock on error/invalid output (output labeled simulated); test `{test}/agents/LlmAgentProviderTest.java` with a stubbed endpoint covering valid, invalid, and unavailable cases; never logs the key
-- [ ] T142 [US7] `frontend/src/pages/MetricsPage.tsx`, scenario launch buttons on `RunsPage.tsx`, summary download link, nav bar in `frontend/src/App.tsx`
-- [ ] T143 [P] [US1] Documentation: `docs/architecture.md`, `docs/api.md` (generated OpenAPI export), `docs/scenarios.md`, `docs/risks-and-tradeoffs.md`, `docs/demo-script.md` (root plan.md §15) — must make T164 pass (`001-FR-030`), update `README.md` with copy-paste setup and phase status
+- [X] T164 [P] [US2] `{test}/delivery/DeliverablesTest.java` (`@Requirement("001-FR-030")`): `README.md` has prerequisites, copy-paste start commands and the no-API-key demo mode; `.env.example` and `docker-compose.yml` exist and `.env.example` contains no real secrets; `docs/architecture.md`, `docs/risks-and-tradeoffs.md`, `docs/demo-script.md`, `docs/api.md`, `docs/scenarios.md` exist and are non-empty; backend and frontend test directories contain tests; `docs/demo-script.md` covers all three scenarios, approval, retry, safe-stop, re-plan, rollback, metrics and link creation (write first; it fails until T143 is done)
+- [X] T138 [US1] `{main}/scenarios/ScenarioPreset.java`, `ScenarioService.java` with seeded requirements for Greenfield/Brownfield/Ambiguous and `POST /api/agent-runs` `scenario` parameter
+- [X] T139 [P] [US1] Brownfield analysis in `{main}/agents/mock/BrownfieldAnalyzer.java` grounded in `fixtures/brownfield/`; ambiguity handling (`NEEDS_CLARIFICATION`) in `RequirementsAnalystAgent`
+- [X] T140 [P] [US1] `{main}/metrics/MetricsService.java`, `MetricsController.java` (`/api/agent-runs/{id}/metrics`, `/api/metrics`) derived from audit/attempt data
+- [X] T141 [P] [US1] `{main}/summary/EngineeringSummaryService.java` + `GET /api/agent-runs/{id}/summary` (markdown export, stored as artifact)
+- [X] T157 [P] [US1] Optional provider (`001-FR-010`, constitution III): `{main}/agents/llm/LlmAgentProvider.java` configured only via env (`AGENT_PROVIDER`, `LLM_API_KEY`, `LLM_ENDPOINT`), validates responses against the agent contract and the evaluator, falls back to mock on error/invalid output (output labeled simulated); test `{test}/agents/LlmAgentProviderTest.java` with a stubbed endpoint covering valid, invalid, and unavailable cases; never logs the key
+- [X] T142 [US7] `frontend/src/pages/MetricsPage.tsx`, scenario launch buttons on `RunsPage.tsx`, summary download link, nav bar in `frontend/src/App.tsx`
+- [X] T143 [P] [US1] Documentation: `docs/architecture.md`, `docs/api.md` (generated OpenAPI export), `docs/scenarios.md`, `docs/risks-and-tradeoffs.md`, `docs/demo-script.md` (root plan.md §15) — must make T164 pass (`001-FR-030`), update `README.md` with copy-paste setup and phase status
 
 ### Gate block for P6
 
@@ -330,7 +330,7 @@ description: "Task list for phased delivery with quality gates"
 - [ ] T153 [P] Frontend accessibility pass (labels, focus order, keyboard use) across all pages; fix issues (`002-FR-017`)
 - [ ] T154 [P] Run `scripts/tests/gate-selftest.ps1` and record results in `docs/gates/selftest.md`
 - [ ] T163 [US7] Timed end-to-end rehearsal of `docs/demo-script.md` (001 SC-012: < 20 min) and a first-use run per frontend page without instructions (002 SC-009); record results in `docs/walkthroughs/final.md`
-- [ ] T155 Write final engineering summary `docs/final-summary.md` (plan, rationale, artifacts, assumptions, risks, validation results, limitations, next steps) and tag `v1.0`
+- [X] T155 Write final engineering summary `docs/final-summary.md` (plan, rationale, artifacts, assumptions, risks, validation results, limitations, next steps) and tag `v1.0`
 
 ---
 
