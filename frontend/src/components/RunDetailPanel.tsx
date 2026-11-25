@@ -7,9 +7,11 @@ interface Props {
   busy: boolean
   onStart: () => void
   onPause: () => void
+  onRetry?: (nodeId: string) => void
+  onReplan?: (nodeId: string, requirement?: string) => void
 }
 
-export default function RunDetailPanel({ run, busy, onStart, onPause }: Props) {
+export default function RunDetailPanel({ run, busy, onStart, onPause, onRetry, onReplan }: Props) {
   const canStart = run.status === 'CREATED' || run.status === 'PAUSED'
   const canPause = run.status === 'RUNNING'
   return (
@@ -28,7 +30,7 @@ export default function RunDetailPanel({ run, busy, onStart, onPause }: Props) {
           Pause
         </button>
       </div>
-      <StageList nodes={run.nodes} />
+      <StageList nodes={run.nodes} busy={busy} onRetry={onRetry} onReplan={onReplan} />
     </section>
   )
 }
