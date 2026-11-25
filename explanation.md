@@ -8,14 +8,15 @@ than the code and tests prove.
 
 | Area | State |
 |------|-------|
-| Spec, plan, research, contracts, 164 tasks, constitution v1.1.0 | Done (`specs/`, `.specify/memory/constitution.md`) |
-| Phase gates (tests + traceability, security, review, performance, evaluation, publish) | Built; self-test proves they fail on bad input |
-| **P1 Shortener core** (create, redirect, validation, error model, health, OpenAPI, simple UI) | Built; 48 backend and 9 frontend tests pass |
-| P2 Hardening/analytics, P3 Orchestration core, P4 Agents/audit/evaluation, P5 Governance/resilience, P6 Scenarios/metrics/summary | **Not built yet** |
-| Phase 1 dependency-vulnerability scan (OWASP/NVD) | Not finished; waived by the owner at publish and recorded (see `docs/reviews/phase-1.md`, R7) |
+| Spec, plan, research, contracts, tasks, constitution v1.1.0 | Done (`specs/`, `.specify/memory/constitution.md`) |
+| Phase gates (tests + traceability, security, review, performance, evaluation, publish) | Built and used for every phase |
+| P1 shortener core; P2 expiry, analytics, idempotency, rate limiting | Published (`phase-1`, `phase-2`) |
+| P3 orchestration core; P4 agents, artifacts, audit, evaluation; P5 policy, approvals, retry/fallback, re-plan, rollback | Published (`phase-3` to `phase-5`) |
+| P6 scenarios, metrics (incl. MTTR), engineering summary, optional LLM provider, documentation | Built and tested; published with the `phase-6` tag when its gates pass (see `docs/publish-log.md`) |
 
-The orchestration layer, which the brief calls the critical differentiator, is **designed but not yet implemented**
-(P3-P5). Everything below about orchestration describes the plan and the tests that will prove it.
+The orchestration layer, which the brief calls the critical differentiator, is **implemented and tested** (graph, state machine,
+parallel scheduler with joins, approvals, retry, fallback, safe-stop, rollback, re-plan, audit, metrics). Remaining gaps are in
+section 4.
 
 ## 2. Why these decisions
 
@@ -108,7 +109,7 @@ commits (backend, frontend, scripts, specs, evidence).
 
 These are real. None is hidden in the specs.
 
-1. **MTTR is not in the plan.** The brief lists MTTR; the spec lists success rate, retries, rollbacks, durations,
+1. **MTTR - now implemented in P6** (it was missing from the original plan). The brief lists MTTR; the spec lists success rate, retries, rollbacks, durations,
    stage latency and failed/blocked counts. Add it to the metrics requirement and task T135/T140.
 2. **Explicit entry/exit gates per stage** are implied by dependencies and approval gates but not named as entry and exit
    conditions in the spec. Add them to the workflow definition and `GraphValidator` tests.
@@ -116,8 +117,7 @@ These are real. None is hidden in the specs.
    separate change-control record (change ticket, risk class). Consider adding a risk classification to approvals.
 4. **Scalability** is limited to a bounded thread pool and database constraints on one machine; there is no
    multi-instance or queue design. This is a stated trade-off.
-5. **Only Phase 1 exists.** The orchestration core, agents, governance and scenarios are not built, so the brief's central
-   requirement is currently a design, not a running system.
+5. **Entry/exit gates** are expressed through dependencies and approval gates rather than separate entry/exit conditions per stage.
 6. **Phase 1's vulnerability scan did not finish** before publishing; it is waived and must be re-run.
 7. **No human has used the UI yet.** The walkthrough was performed by the coding agent over the API plus component tests.
 8. **No real LLM is used or evaluated.** Demo mode is fully deterministic; the optional provider is planned.

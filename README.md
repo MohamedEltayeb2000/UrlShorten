@@ -53,8 +53,8 @@ Updated 2026-11-24. Gate columns: Tests / Security / Review / Performance / Eval
 | P2 | Expiry, deactivation, click analytics, idempotency, rate limiting | Published (tag `phase-2`) | PASS / PASS (Spring Framework CVEs suppressed, owner waiver) / PASS / PASS / - | 79 backend, 14 frontend |
 | P3 | Orchestration core (graph, scheduler, parallel + join) | Published (tag `phase-3`) | PASS / PASS / PASS / PASS / - | 129 backend, 26 frontend |
 | P4 | Agents, artifacts, audit, AI evaluation | Published (tag `phase-4`) | PASS / PASS / PASS / PASS / PASS | 179 backend, 35 frontend |
-| P5 | Policy, approvals, retry/fallback, rollback, re-plan | Built and tested; publishing | pending | 230 backend, 47 frontend |
-| P6 | Scenarios, metrics, summary, docs | Planned | - | - |
+| P5 | Policy, approvals, retry/fallback, rollback, re-plan | Published (tag `phase-5`) | PASS / PASS / PASS / PASS / PASS | 233 backend, 47 frontend |
+| P6 | Scenarios, metrics, summary, docs | Built and tested; publishing | pending | 278 backend, 57 frontend |
 
 Security note: the first full dependency scan (OWASP/NVD) finished after P1 was published and found high-severity CVEs in the
 original dependency versions. Spring Boot, Tomcat, the PostgreSQL driver, log4j and Swagger UI were upgraded in P2 and the scan is
