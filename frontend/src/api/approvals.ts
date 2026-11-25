@@ -16,9 +16,30 @@ export interface PendingApproval {
   assumptions?: string[]
   policyReason?: string
   createdAt: string
+  riskClass?: RiskClass
+  changeTicket?: string
+  riskJustification?: string
+  /** JSON text: string[] */
+  proposedCommands?: string
+  /** JSON text: ProposedMigration[] */
+  proposedMigrations?: string
+}
+
+export type RiskClass = 'LOW' | 'MEDIUM' | 'HIGH'
+
+export interface ProposedMigration {
+  name: string
+  sql?: string
+  touchesNonTestData?: boolean
+  destructive?: boolean
 }
 
 export interface ApprovalView {
+  riskClass?: RiskClass
+  changeTicket?: string
+  riskJustification?: string
+  proposedCommands?: string
+  proposedMigrations?: string
   id: number
   nodeId: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
@@ -35,6 +56,20 @@ export interface DecisionBody {
   decision: 'APPROVE' | 'REJECT'
   comment: string
   artifactVersion?: number
+  changeTicket?: string
+  riskJustification?: string
+}
+
+export const CHANGE_TICKET = /^[A-Za-z][A-Za-z0-9]*-[0-9]{1,8}$/
+
+export function parseJsonList<T>(text?: string): T[] {
+  if (!text) return []
+  try {
+    const v: unknown = JSON.parse(text)
+    return Array.isArray(v) ? (v as T[]) : []
+  } catch {
+    return []
+  }
 }
 
 export const listPendingApprovals = () => http<PendingApproval[]>('/api/approvals/pending')

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ApprovalView, PendingApproval, decide } from '../api/approvals'
+import { ApprovalView, CHANGE_TICKET, PendingApproval, ProposedMigration, decide, parseJsonList } from '../api/approvals'
 import { ApiError } from '../api/http'
 
 const FORBIDDEN = 'Not allowed: agents and the artifact author cannot approve their own output. Switch "Acting as" to a different reviewer.'
@@ -10,6 +10,11 @@ export default function ApprovalCard({ item }: { item: PendingApproval }) {
   const key = `ap-${item.approvalId}`
   const [user, setUser] = useState('demo-user')
   const [comment, setComment] = useState('')
+  const [ticket, setTicket] = useState('')
+  const [justification, setJustification] = useState('')
+  const risk = item.riskClass ?? (item.kind === 'HIGH_IMPACT_ACTION' ? 'HIGH' : 'MEDIUM')
+  const commands = parseJsonList<string>(item.proposedCommands)
+  const migrations = parseJsonList<ProposedMigration>(item.proposedMigrations)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ApprovalView | null>(null)
@@ -24,10 +29,25 @@ export default function ApprovalCard({ item }: { item: PendingApproval }) {
       setError('A comment is required when rejecting.')
       return
     }
+    const highApprove = decision === 'APPROVE' && risk === 'HIGH'
+    if (highApprove && !CHANGE_TICKET.test(ticket.trim())) {
+      setError('Change record required: enter a change ticket such as CHG-1042.')
+      return
+    }
+    if (highApprove && justification.trim().length < 10) {
+      setError('Change record required: the risk justification needs at least 10 characters.')
+      return
+    }
     setBusy(true)
     setError(null)
     try {
-      const body = { nodeId: item.nodeId, decision, comment: comment.trim(), artifactVersion: item.artifactVersion }
+      const body = {
+        nodeId: item.nodeId,
+        decision,
+        comment: comment.trim(),
+        artifactVersion: item.artifactVersion,
+        ...(highApprove ? { changeTicket: ticket.trim(), riskJustification: justification.trim() } : {}),
+      }
       setResult(await decide(item.runId, body, user))
     } catch (e) {
       setError(e instanceof ApiError && e.code === 'APPROVAL_FORBIDDEN' ? `${FORBIDDEN} (${e.message})` : (e as Error).message)
@@ -65,6 +85,28 @@ export default function ApprovalCard({ item }: { item: PendingApproval }) {
           </>
         )}
         {item.policyReason && <p>Policy: {item.policyReason}</p>}
+        <p>Risk class: {risk}</p>
+        {commands.length > 0 && (
+          <>
+            <h4>Proposed commands</h4>
+            <ul>{commands.map((c) => <li key={c}><code>{c}</code></li>)}</ul>
+          </>
+        )}
+        {migrations.length > 0 && (
+          <>
+            <h4>Proposed migrations</h4>
+            <ul>
+              {migrations.map((m) => (
+                <li key={m.name}>
+                  {m.name}
+                  {m.sql && <> - <code>{m.sql}</code></>}
+                  {m.touchesNonTestData ? ' (touches non-test data)' : ' (test data only)'}
+                  {m.destructive ? ' (destructive)' : ''}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
         <p>
           <Link to={`/runs/${item.runId}/artifacts`}>View artifacts for run {item.runId}</Link>
         </p>
@@ -79,6 +121,14 @@ export default function ApprovalCard({ item }: { item: PendingApproval }) {
           <>
             <label htmlFor={`${key}-user`}>Acting as</label>
             <input id={`${key}-user`} type="text" value={user} onChange={(e) => setUser(e.target.value)} />
+            {risk === 'HIGH' && (
+              <>
+                <label htmlFor={`${key}-ticket`}>Change ticket</label>
+                <input id={`${key}-ticket`} type="text" placeholder="CHG-1042" value={ticket} onChange={(e) => setTicket(e.target.value)} />
+                <label htmlFor={`${key}-just`}>Risk justification</label>
+                <textarea id={`${key}-just`} rows={2} value={justification} onChange={(e) => setJustification(e.target.value)} />
+              </>
+            )}
             <label htmlFor={`${key}-comment`}>Comment (required when rejecting)</label>
             <textarea
               id={`${key}-comment`}
