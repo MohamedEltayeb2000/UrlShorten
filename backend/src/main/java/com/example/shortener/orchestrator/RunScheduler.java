@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 public class RunScheduler {
     private static final Logger log = LoggerFactory.getLogger(RunScheduler.class);
     static final String INTERRUPTED = "INTERRUPTED";
+    static final String GATE_ENTRY_FAILED = "GATE_ENTRY_FAILED";
     private static final Set<NodeStatus> FAILED_LIKE = EnumSet.of(NodeStatus.FAILED, NodeStatus.CANCELLED, NodeStatus.SKIPPED);
 
     private final AgentRunRepository runs;
@@ -46,6 +47,7 @@ public class RunScheduler {
     private final AuditService audit;
     private final ApprovalRepository approvals;
     private final RetryPolicy retryPolicy;
+    private final StageGates gates;
     private final Semaphore permits;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final Map<Long, Object> locks = new ConcurrentHashMap<>();
@@ -53,7 +55,8 @@ public class RunScheduler {
 
     public RunScheduler(AgentRunRepository runs, RunNodeRepository nodes, RunTransitions transitions, StageHandler handler,
                         StageAttemptRepository attempts, AuditService audit, ApprovalRepository approvals, RetryPolicy retryPolicy,
-                        @Value("${shortener.orchestrator.max-parallel:4}") int maxParallel) {
+                        StageGates gates, @Value("${shortener.orchestrator.max-parallel:4}") int maxParallel) {
+        this.gates = gates;
         this.runs = runs;
         this.nodes = nodes;
         this.transitions = transitions;
@@ -174,7 +177,8 @@ public class RunScheduler {
 
         List<RunNode> after = nodes.findByRunIdOrderById(runId);
         if (after.stream().allMatch(n -> n.getStatus().isTerminal())) {
-            boolean failed = after.stream().anyMatch(n -> n.getStatus() == NodeStatus.FAILED);
+            boolean failed = after.stream().anyMatch(n -> n.getStatus() == NodeStatus.FAILED
+                    || (n.getStatus() == NodeStatus.SKIPPED && GATE_ENTRY_FAILED.equals(n.getErrorCode())));
             run.setStatus(failed ? RunStatus.FAILED : RunStatus.SUCCEEDED);
             run.setCompletedAt(Instant.now());
             runs.save(run);
@@ -221,6 +225,15 @@ public class RunScheduler {
                 int attempt;
                 synchronized (lock(runId)) {
                     if (load(runId).getStatus() != RunStatus.RUNNING) return; // paused: stays READY until resumed
+                    StageGates.GateResult entry = gates.entry(runId, nodes.findById(nodeDbId).orElseThrow().getNodeId());
+                    if (!entry.passed()) { // entry gate failed: never RUNNING, treated like a failed prerequisite
+                        ran = true;
+                        transitions.move(nodeDbId, NodeStatus.SKIPPED, "entry gate failed: " + entry.firstFailure(), n -> {
+                            n.setErrorCode(GATE_ENTRY_FAILED);
+                            n.setErrorSummary("Entry gate failed: " + entry.firstFailure());
+                        });
+                        return;
+                    }
                     RunNode started = transitions.move(nodeDbId, NodeStatus.RUNNING, "started", n -> {
                         n.setAttemptCount(n.getAttemptCount() + 1);
                         n.setStartedAt(Instant.now());
@@ -257,7 +270,7 @@ public class RunScheduler {
                     fallbackUsed = true;
                     out = invoke(execution(runId, nodeId, attempt), true);
                 }
-                apply(runId, nodeDbId, nodeId, out, record, fallbackUsed);
+                apply(runId, nodeDbId, nodeId, gateExit(runId, nodeId, out), record, fallbackUsed);
             } finally {
                 permits.release();
             }
@@ -270,9 +283,17 @@ public class RunScheduler {
         }
         if (ran) {
             synchronized (lock(runId)) {
-                scheduleLocked(runId);
+                kickLocked(runId); // also re-submits a stage returned to READY by a safe-stop if the run was resumed meanwhile
             }
         }
+    }
+
+    /** Evaluates the exit gate once the handler returned (or held its output); a failed gate turns success into a failure. */
+    private Outcome gateExit(long runId, String nodeId, Outcome out) {
+        if (out.failure() != null) return out; // handler failed or was interrupted: the exit gate is not reached
+        StageGates.GateResult r = gates.exit(runId, nodeId, out.held());
+        if (r.passed() || out.held() != null) return out;
+        return new Outcome(new GateFailedException("exit gate failed: " + r.firstFailure()), null, null);
     }
 
     private StageExecution execution(long runId, String nodeId, int attempt) {
@@ -281,7 +302,12 @@ public class RunScheduler {
     }
 
     private void apply(long runId, long nodeDbId, String nodeId, Outcome out, StageAttempt record, boolean fallbackUsed) {
-        if (out.ok2()) {
+        if (out.failure() instanceof StageInterruptedException) { // safe-stop: not a failure, re-runs on resume
+            synchronized (lock(runId)) {
+                transitions.move(nodeDbId, NodeStatus.READY, "interrupted by safe-stop, will re-run on resume", null);
+            }
+            finish(record, "INTERRUPTED", null, fallbackUsed);
+        } else if (out.ok2()) {
             synchronized (lock(runId)) {
                 transitions.move(nodeDbId, NodeStatus.SUCCEEDED, fallbackUsed ? "completed with simulated fallback" : "completed",
                         n -> n.setCompletedAt(Instant.now()));

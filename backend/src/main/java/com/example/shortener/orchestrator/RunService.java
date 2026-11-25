@@ -23,9 +23,11 @@ public class RunService {
     private final RunScheduler scheduler;
     private final Workflows workflows;
     private final AuditService audit;
+    private final StageGates gates;
 
     public RunService(AgentRunRepository runs, RunNodeRepository nodes, RunTransitions transitions, RunScheduler scheduler,
-                      Workflows workflows, AuditService audit) {
+                      Workflows workflows, AuditService audit, StageGates gates) {
+        this.gates = gates;
         this.runs = runs;
         this.nodes = nodes;
         this.transitions = transitions;
@@ -71,11 +73,13 @@ public class RunService {
     public RunDtos.RunDetail detail(long runId) {
         AgentRun r = runs.findById(runId).orElseThrow(
                 () -> new ApiException(HttpStatus.NOT_FOUND, "RUN_NOT_FOUND", "Run not found"));
-        Map<String, Integer> levels = GraphValidator.levels(workflows.get(r.getWorkflowName()));
+        WorkflowDefinition def = workflows.get(r.getWorkflowName());
+        Map<String, Integer> levels = GraphValidator.levels(def);
+        Map<String, StageGates.Gates> gateViews = gates.views(runId, def);
         List<RunDtos.NodeView> views = nodes.findByRunIdOrderById(runId).stream()
                 .map(n -> new RunDtos.NodeView(n.getNodeId(), n.getName(), n.getStatus().name(), n.dependsOnIds(),
                         levels.getOrDefault(n.getNodeId(), 0), n.getAttemptCount(), n.getStartedAt(), n.getCompletedAt(),
-                        n.getErrorSummary()))
+                        n.getErrorSummary(), gateViews.get(n.getNodeId())))
                 .toList();
         return new RunDtos.RunDetail(r.getId(), r.getScenarioType(), r.getRawRequirement(), r.getStatus().name(),
                 r.getCreatedAt(), r.getPlanVersion(), r.getStartedAt(), r.getCompletedAt(), views);

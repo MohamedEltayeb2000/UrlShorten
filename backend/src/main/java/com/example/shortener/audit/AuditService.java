@@ -2,6 +2,8 @@ package com.example.shortener.audit;
 
 import com.example.shortener.shortener.dto.PageResponse;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import org.slf4j.MDC;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,12 @@ public class AuditService {
         String corr = correlationId != null ? correlationId : MDC.get("requestId");
         String d = details != null && details.length() > MAX_DETAILS ? details.substring(0, MAX_DETAILS) : details;
         return repo.save(new AuditEvent(runId, actorType, actorId, eventType, Instant.now(), d, corr));
+    }
+
+    /** All events of the given types for a run, oldest first (not paged; for derived views such as stage gates). */
+    @Transactional(readOnly = true)
+    public List<AuditEvent> eventsOfTypes(long runId, Collection<String> types) {
+        return repo.findByRunIdAndEventTypeInOrderByIdAsc(runId, types);
     }
 
     @Transactional(readOnly = true)

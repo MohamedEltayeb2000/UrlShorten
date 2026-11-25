@@ -96,7 +96,17 @@ public class AgentStageHandler implements StageHandler {
         process(ex, fallbackProvider, true);
     }
 
+    @Override
+    public boolean producesArtifacts() {
+        return true;
+    }
+
+    private static void stopIfCancelled(StageExecution ex) {
+        if (ex.cancelled().getAsBoolean()) throw new StageInterruptedException("stage " + ex.nodeId() + " stopped by safe-stop");
+    }
+
     private void process(StageExecution ex, AgentProvider source, boolean fallback) throws Exception {
+        stopIfCancelled(ex); // safe-stop: nothing has been stored yet
         AgentRun run = runs.findById(ex.runId()).orElseThrow();
         RunNode node = nodes.findByRunIdAndNodeId(ex.runId(), ex.nodeId()).orElseThrow();
         String type = ARTIFACT_TYPES.get(ex.nodeId());
@@ -137,6 +147,7 @@ public class AgentStageHandler implements StageHandler {
             }
         }
 
+        stopIfCancelled(ex); // safe-stop: do not store the artifact or raise an approval
         Artifact stored = artifacts.create(ex.runId(), ex.nodeId(), type, content, agent.name(), parentIds, result.referencesToInputs());
         audit.append(ex.runId(), "AGENT", agent.name(), "ARTIFACT_CREATED",
                 type + " v" + stored.getVersion() + " (score " + String.format("%.2f", evaluation.score()) + ", simulated="

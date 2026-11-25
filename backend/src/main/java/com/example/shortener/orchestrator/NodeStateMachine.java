@@ -14,7 +14,8 @@ public final class NodeStateMachine {
     static {
         TABLE.put(PENDING, Set.of(READY, BLOCKED, SKIPPED, CANCELLED));
         TABLE.put(READY, Set.of(RUNNING, BLOCKED, SKIPPED, CANCELLED));
-        TABLE.put(RUNNING, Set.of(SUCCEEDED, FAILED, RETRYING, WAITING_FOR_APPROVAL, BLOCKED, CANCELLED));
+        TABLE.put(RUNNING, Set.of(SUCCEEDED, FAILED, RETRYING, WAITING_FOR_APPROVAL, BLOCKED, CANCELLED,
+                READY)); // READY = interrupted by safe-stop, re-runs on resume
         TABLE.put(RETRYING, Set.of(RUNNING, FAILED, CANCELLED));
         // BLOCKED here means rejected by a human.
         TABLE.put(WAITING_FOR_APPROVAL, Set.of(SUCCEEDED, BLOCKED, PENDING, CANCELLED)); // PENDING = re-queued by a re-plan
