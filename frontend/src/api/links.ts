@@ -1,4 +1,4 @@
-import { http } from './http'
+import { http, seg, int } from './http'
 
 export interface Link {
   code: string
@@ -24,6 +24,6 @@ export const createLink = (url: string, alias?: string, expiresAt?: string) =>
     body: JSON.stringify({ url, alias: alias || undefined, expiresAt: expiresAt || undefined }),
   })
 
-export const listLinks = (page = 0, size = 20) => http<Page<Link>>(`/api/links?page=${page}&size=${size}`)
+export const listLinks = (page = 0, size = 20) => http<Page<Link>>(`/api/links?page=${int(page)}&size=${int(size)}`)
 
-export const deactivateLink = (code: string) => http<void>(`/api/links/${encodeURIComponent(code)}`, { method: 'DELETE' })
+export const deactivateLink = (code: string) => http<void>(`/api/links/${seg(code)}`, { method: 'DELETE' })

@@ -1,4 +1,4 @@
-import { http } from './http'
+import { http, int } from './http'
 import type { Page } from './links'
 
 export interface ClickView {
@@ -16,4 +16,4 @@ export interface Summary {
   recentEvents: Page<ClickView>
 }
 
-export const getSummary = (page = 0, size = 5) => http<Summary>(`/api/analytics/summary?page=${page}&size=${size}`)
+export const getSummary = (page = 0, size = 5) => http<Summary>(`/api/analytics/summary?page=${int(page)}&size=${int(size)}`)

@@ -1,4 +1,4 @@
-import { http } from './http'
+import { http, seg } from './http'
 
 export type ApprovalKind = 'CLARIFICATION' | 'HIGH_IMPACT_ACTION' | 'HELD_OUTPUT'
 
@@ -74,10 +74,10 @@ export function parseJsonList<T>(text?: string): T[] {
 
 export const listPendingApprovals = () => http<PendingApproval[]>('/api/approvals/pending')
 
-export const listRunApprovals = (runId: number) => http<ApprovalView[]>(`/api/agent-runs/${runId}/approvals`)
+export const listRunApprovals = (runId: number) => http<ApprovalView[]>(`/api/agent-runs/${seg(runId)}/approvals`)
 
 export const decide = (runId: number, body: DecisionBody, user = 'demo-user') =>
-  http<ApprovalView>(`/api/agent-runs/${runId}/approvals`, {
+  http<ApprovalView>(`/api/agent-runs/${seg(runId)}/approvals`, {
     method: 'POST',
     headers: { 'X-Demo-User': user.trim() || 'demo-user' },
     body: JSON.stringify(body),

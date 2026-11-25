@@ -1,4 +1,4 @@
-import { http, httpText, saveText } from './http'
+import { http, httpText, saveText, seg } from './http'
 import type { RunDetail } from './runs'
 
 export interface ScenarioPreset {
@@ -49,14 +49,14 @@ export interface RunMetrics {
 }
 
 export const getOverallMetrics = () => http<OverallMetrics>('/api/metrics')
-export const getRunMetrics = (id: number) => http<RunMetrics>(`/api/agent-runs/${id}/metrics`)
+export const getRunMetrics = (id: number) => http<RunMetrics>(`/api/agent-runs/${seg(id)}/metrics`)
 export const listScenarios = () => http<ScenarioPreset[]>('/api/scenarios')
 
 /** Create a run from a scenario preset; the server seeds the requirement. */
 export const launchScenario = (scenario: ScenarioPreset['id']) =>
   http<RunDetail>('/api/agent-runs', { method: 'POST', body: JSON.stringify({ scenario }) })
 
-export const getSummary = (id: number) => httpText(`/api/agent-runs/${id}/summary`)
+export const getSummary = (id: number) => httpText(`/api/agent-runs/${seg(id)}/summary`)
 
 export async function downloadSummary(id: number) {
   saveText(await getSummary(id), `run-${id}-summary.md`)
