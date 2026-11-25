@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { downloadSummary } from '../api/metrics'
 import type { RunDetail } from '../api/runs'
 import StageList from './StageList'
 
@@ -14,6 +16,15 @@ interface Props {
 export default function RunDetailPanel({ run, busy, onStart, onPause, onRetry, onReplan }: Props) {
   const canStart = run.status === 'CREATED' || run.status === 'PAUSED'
   const canPause = run.status === 'RUNNING'
+  const [exportError, setExportError] = useState<string | null>(null)
+  async function exportSummary() {
+    setExportError(null)
+    try {
+      await downloadSummary(run.id)
+    } catch (e) {
+      setExportError((e as Error).message)
+    }
+  }
   return (
     <section aria-labelledby="run-detail-heading" className="run-detail">
       <h3 id="run-detail-heading">Run #{run.id}</h3>
@@ -29,7 +40,16 @@ export default function RunDetailPanel({ run, busy, onStart, onPause, onRetry, o
         <button type="button" onClick={onPause} disabled={!canPause || busy}>
           Pause
         </button>
+        <Link to={`/metrics?run=${run.id}`}>View metrics</Link>
+        <button type="button" onClick={() => void exportSummary()}>
+          Download engineering summary
+        </button>
       </div>
+      {exportError && (
+        <p role="alert" className="error">
+          {exportError}
+        </p>
+      )}
       <StageList nodes={run.nodes} busy={busy} onRetry={onRetry} onReplan={onReplan} />
     </section>
   )
