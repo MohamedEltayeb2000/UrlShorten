@@ -247,35 +247,35 @@ description: "Task list for phased delivery with quality gates"
 
 ### Tests for P5
 
-- [ ] T108 [P] [US1] `{test}/governance/PolicyEngineTest.java` — secrets, unsafe schemes, destructive commands, prod deploy denied; failing tests block release without audited override (`001-FR-013,014`)
-- [ ] T109 [P] [US1] `{test}/governance/ApprovalServiceTest.java` — record fields complete, rejection blocks, agent cannot approve own work, duplicate/stale approvals refused (`001-FR-011,012`)
-- [ ] T110 [P] [US1] `{test}/orchestrator/RetryPolicyTest.java` — bounded attempts/backoff, transient only, validation/policy failures not retried, fallback labeled simulated (`001-FR-010,015`)
-- [ ] T111 [P] [US1] `{test}/artifacts/RollbackTest.java` — restore prior approved version, history/audit intact, unapproved version refused (`001-FR-016`)
-- [ ] T112 [P] [US1] `{test}/orchestrator/ReplanTest.java` — downstream closure stale, unaffected untouched, stale output blocked, plan version incremented, only affected re-run (`001-FR-017`)
-- [ ] T113 [US1] `{test}/governance/GovernanceFlowIT.java` — approval gate blocks downstream until approved; reject-then-approve path; pause/resume; manual retry (`001-FR-007,011,012`)
-- [ ] T114 [P] [US7] `frontend/tests/ApprovalsPage.test.tsx` — pending queue, approve/reject with comment, error states, labeled comment field, keyboard-operable buttons (`@req 001-FR-021`, `002-FR-017`)
+- [X] T108 [P] [US1] `{test}/governance/PolicyEngineTest.java` — secrets, unsafe schemes, destructive commands, prod deploy denied; failing tests block release without audited override (`001-FR-013,014`)
+- [X] T109 [P] [US1] `{test}/governance/ApprovalServiceTest.java` — record fields complete, rejection blocks, agent cannot approve own work, duplicate/stale approvals refused (`001-FR-011,012`)
+- [X] T110 [P] [US1] `{test}/orchestrator/RetryPolicyTest.java` — bounded attempts/backoff, transient only, validation/policy failures not retried, fallback labeled simulated (`001-FR-010,015`)
+- [X] T111 [P] [US1] `{test}/artifacts/RollbackTest.java` — restore prior approved version, history/audit intact, unapproved version refused (`001-FR-016`)
+- [X] T112 [P] [US1] `{test}/orchestrator/ReplanTest.java` — downstream closure stale, unaffected untouched, stale output blocked, plan version incremented, only affected re-run (`001-FR-017`)
+- [X] T113 [US1] `{test}/governance/GovernanceFlowIT.java` — approval gate blocks downstream until approved; reject-then-approve path; pause/resume; manual retry (`001-FR-007,011,012`)
+- [X] T114 [P] [US7] `frontend/tests/ApprovalsPage.test.tsx` — pending queue, approve/reject with comment, error states, labeled comment field, keyboard-operable buttons (`@req 001-FR-021`, `002-FR-017`)
 
 ### Implementation for P5
 
-- [ ] T115 [US1] Flyway `{res}/db/migration/V5__governance.sql` (approval, policy_decision, artifact status/plan_version columns)
-- [ ] T116 [P] [US1] `{main}/governance/PolicyEngine.java`, `PolicyDecision.java`, `PolicyRules.java` (the six minimum policies)
+- [X] T115 [US1] Flyway `{res}/db/migration/V5__governance.sql` (approval, policy_decision, artifact status/plan_version columns)
+- [X] T116 [P] [US1] `{main}/governance/PolicyEngine.java`, `PolicyDecision.java`, `PolicyRules.java` (the six minimum policies)
 - [ ] T156 [US1] Actor identity model (do before T117, after T115): `{main}/governance/Actor.java` (type `HUMAN`/`AGENT`, id), demo-user resolution from the `X-Demo-User` header, default `demo-user`, always `HUMAN` (agent actors get 403) in `{main}/governance/ActorResolver.java`; agent actors can never be approvers; approval and audit records store the actor (`001-FR-012`; extend T109 to assert it)
-- [ ] T117 [P] [US1] `{main}/governance/Approval.java`, `ApprovalService.java`, `ApprovalController.java` (`POST /api/agent-runs/{id}/approvals`)
-- [ ] T118 [US1] Add `WAITING_FOR_APPROVAL`/`BLOCKED`/`RETRYING` handling to `{main}/orchestrator/Scheduler.java`; approval-gated stages (implementation apply, release readiness), and release of an evaluation-held (`BLOCKED`) output only through a recorded human approval
-- [ ] T119 [P] [US1] `{main}/orchestrator/RetryPolicy.java`, `TransientFailureException.java`, fallback to mock provider; seeded failure injector `{main}/orchestrator/FailureInjector.java` (config-driven for demo)
-- [ ] T120 [P] [US1] `{main}/artifacts/RollbackService.java` and `POST /api/agent-runs/{id}/rollback`
-- [ ] T121 [US1] `{main}/orchestrator/ReplanService.java` (downstream closure, stale marking, new plan version) and `POST /api/agent-runs/{id}/replan`, `POST .../nodes/{nodeId}/retry`
-- [ ] T122 [US7] `frontend/src/pages/ApprovalsPage.tsx`; add pause/resume/retry/re-plan controls and stale/blocked/waiting status styles to `frontend/src/pages/RunsPage.tsx`
+- [X] T117 [P] [US1] `{main}/governance/Approval.java`, `ApprovalService.java`, `ApprovalController.java` (`POST /api/agent-runs/{id}/approvals`)
+- [X] T118 [US1] Add `WAITING_FOR_APPROVAL`/`BLOCKED`/`RETRYING` handling to `{main}/orchestrator/Scheduler.java`; approval-gated stages (implementation apply, release readiness), and release of an evaluation-held (`BLOCKED`) output only through a recorded human approval
+- [X] T119 [P] [US1] `{main}/orchestrator/RetryPolicy.java`, `TransientFailureException.java`, fallback to mock provider; seeded failure injector `{main}/orchestrator/FailureInjector.java` (config-driven for demo)
+- [X] T120 [P] [US1] `{main}/artifacts/RollbackService.java` and `POST /api/agent-runs/{id}/rollback`
+- [X] T121 [US1] `{main}/orchestrator/ReplanService.java` (downstream closure, stale marking, new plan version) and `POST /api/agent-runs/{id}/replan`, `POST .../nodes/{nodeId}/retry`
+- [X] T122 [US7] `frontend/src/pages/ApprovalsPage.tsx`; add pause/resume/retry/re-plan controls and stale/blocked/waiting status styles to `frontend/src/pages/RunsPage.tsx`
 
 ### Gate block for P5
 
-- [ ] T123 [P] [US3] `{test}/security/GovernanceSecurityTest.java` (`@Tag("security")`): no bypass of approval via API ordering, replay, or forged approver; no repository write path exists even after approval unless demo switch set (`@Requirement("001-FR-014")`, `@Requirement("001-FR-011")`, `@Requirement("001-FR-012")`)
-- [ ] T124 [P] [US5] Extend `eval/` sets with governance cases (retry-then-fallback output labeled simulated; rejected proposal not consumed); re-run evaluator
-- [ ] T125 [US2] Run `scripts/gate-tests.ps1 --phase 5`
-- [ ] T126 [US3] Run `scripts/gate-security.ps1 --phase 5`
+- [X] T123 [P] [US3] `{test}/security/GovernanceSecurityTest.java` (`@Tag("security")`): no bypass of approval via API ordering, replay, or forged approver; no repository write path exists even after approval unless demo switch set (`@Requirement("001-FR-014")`, `@Requirement("001-FR-011")`, `@Requirement("001-FR-012")`)
+- [X] T124 [P] [US5] Extend `eval/` sets with governance cases (retry-then-fallback output labeled simulated; rejected proposal not consumed); re-run evaluator
+- [X] T125 [US2] Run `scripts/gate-tests.ps1 --phase 5`
+- [X] T126 [US3] Run `scripts/gate-security.ps1 --phase 5`
 - [ ] T127 [US5] Run `scripts/gate-eval.ps1 --phase 5`
-- [ ] T128 [US4] Review P5; write `docs/reviews/phase-5.md` and a timed first-use walkthrough `docs/walkthroughs/phase-5.md` (T161 template)
-- [ ] T129 [US6] Run `scripts/gate-perf.ps1 --phase 5`
+- [X] T128 [US4] Review P5; write `docs/reviews/phase-5.md` and a timed first-use walkthrough `docs/walkthroughs/phase-5.md` (T161 template)
+- [X] T129 [US6] Run `scripts/gate-perf.ps1 --phase 5`
 - [ ] T130 [US8] Run `scripts/gate-all.ps1 --phase 5` then `scripts/publish-phase.ps1 5`
 
 **Checkpoint**: P5 pushed. All governance behaviors demonstrable.
