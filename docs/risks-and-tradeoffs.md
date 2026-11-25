@@ -59,7 +59,7 @@ The system is a demonstration of governed orchestration, not a production servic
 | Authentication | None. Header identity only (R2). No CORS configuration; the dev UI uses the Vite proxy. |
 | Scheduler | Single instance only (R1); no stage cancellation endpoint; `CANCELLED` exists in the state machine but nothing sets it. |
 | Agents | Deterministic mocks only in the default build; with the default configuration any provider value other than `mock` fails startup. `referencesToInputs` always names upstream stages as `STAGE:v1` even if a later version is used; the real lineage is `parent_artifact_ids`. |
-| Brownfield | Grounded only in `fixtures/brownfield/`; the analyzer uses keyword matching (create / insert / post). Because `schema.sql` mentions "idempot" in a comment, its schema-specific compatibility risk is not emitted. |
+| Brownfield | Grounded only in `fixtures/brownfield/`; the analyzer parses Java and SQL structure with regex (no full parser), ignores comments, and assumes one primary type per file. |
 | Ambiguity | The mock analyst treats a run as ambiguous because the `AMBIGUOUS` scenario label says so, not by analysing the text. |
 | Policy | Command, database and deployment rules exist in the engine and are unit tested, but no stage proposes those actions, so they never fire in a run. Secret detection is pattern based (GitHub tokens, cloud keys, private key blocks, credential assignments) and can miss other secret formats. |
 | Rollback | Artifact-level; does not refresh downstream stages or change node state. |

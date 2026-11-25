@@ -7,6 +7,3 @@ CREATE TABLE links (
 );
 
 CREATE INDEX idx_links_code ON links (code);
-
--- Note: no unique constraint on target_url and no idempotency record table,
--- so the same request can create many rows.
