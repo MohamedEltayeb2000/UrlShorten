@@ -12,7 +12,7 @@ than the code and tests prove.
 | Phase gates (tests + traceability, security, review, performance, evaluation, publish) | Built and used for every phase |
 | P1 shortener core; P2 expiry, analytics, idempotency, rate limiting | Published (`phase-1`, `phase-2`) |
 | P3 orchestration core; P4 agents, artifacts, audit, evaluation; P5 policy, approvals, retry/fallback, re-plan, rollback | Published (`phase-3` to `phase-5`) |
-| P6 scenarios, metrics (incl. MTTR), engineering summary, optional LLM provider, documentation | Built and tested; published with the `phase-6` tag when its gates pass (see `docs/publish-log.md`) |
+| P6 scenarios, metrics (incl. MTTR), engineering summary, optional LLM provider, documentation | Published (`phase-6`); see `docs/publish-log.md` |
 
 The orchestration layer, which the brief calls the critical differentiator, is **implemented and tested** (graph, state machine,
 parallel scheduler with joins, approvals, retry, fallback, safe-stop, rollback, re-plan, audit, metrics). Remaining gaps are in
