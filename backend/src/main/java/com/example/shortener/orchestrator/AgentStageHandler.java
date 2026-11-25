@@ -137,6 +137,16 @@ public class AgentStageHandler implements StageHandler {
             }
         }
 
+        // Policy: proposed commands, migrations and deployments (IMPLEMENTATION). Every decision is recorded; a DENY holds the output.
+        List<PolicyDecision> proposalDecisions = proposalDecisions(ex, content);
+        for (PolicyDecision d : proposalDecisions) decisions.save(new PolicyDecisionRecord(ex.runId(), ex.nodeId(), d));
+        for (PolicyDecision d : proposalDecisions) {
+            if (d.outcome() == PolicyOutcome.DENY) {
+                audit.append(ex.runId(), "SYSTEM", "policy", "POLICY_DENIED", ex.nodeId() + ": " + d.rule(), null);
+                throw new HeldForReviewException("Output of " + ex.nodeId() + " violates policy " + d.rule());
+            }
+        }
+
         Artifact stored = artifacts.create(ex.runId(), ex.nodeId(), type, content, agent.name(), parentIds, result.referencesToInputs());
         audit.append(ex.runId(), "AGENT", agent.name(), "ARTIFACT_CREATED",
                 type + " v" + stored.getVersion() + " (score " + String.format("%.2f", evaluation.score()) + ", simulated="
@@ -167,8 +177,14 @@ public class AgentStageHandler implements StageHandler {
     /** Evaluates the high-impact action this stage represents (patch proposal, release readiness), if any. */
     private PolicyDecision actionDecision(StageExecution ex, RunNode node, Map<String, Map<String, Object>> upstream, String content) {
         switch (ex.nodeId()) {
-            case "IMPLEMENTATION":
-                return policy.evaluateAction(new ProposedAction(ActionType.APPLY_PATCH, content, false, 0, false));
+            case "IMPLEMENTATION": {
+                PolicyDecision patch = policy.evaluateAction(new ProposedAction(ActionType.APPLY_PATCH, content, false, 0, false));
+                StringBuilder reason = new StringBuilder(patch.reason());
+                for (PolicyDecision d : proposalDecisions(ex, content)) {
+                    if (d.outcome() == PolicyOutcome.REQUIRE_APPROVAL) reason.append("; ").append(d.rule()).append(": ").append(d.reason());
+                }
+                return new PolicyDecision(patch.rule(), patch.outcome(), reason.toString(), patch.policyVersion());
+            }
             case "RELEASE_READINESS": {
                 int failed = failedTests(upstream.get("TESTING"));
                 return policy.evaluateAction(new ProposedAction(ActionType.RELEASE_READINESS, content, false, failed, false));
@@ -176,6 +192,30 @@ public class AgentStageHandler implements StageHandler {
             default:
                 return null;
         }
+    }
+
+    /** Policy decisions for the commands, migrations and deployment an IMPLEMENTATION output proposes (empty for other stages). */
+    private List<PolicyDecision> proposalDecisions(StageExecution ex, String content) {
+        List<PolicyDecision> out = new ArrayList<>();
+        if (!"IMPLEMENTATION".equals(ex.nodeId())) return out;
+        try {
+            com.fasterxml.jackson.databind.JsonNode so = mapper.readTree(content).path("structuredOutput");
+            boolean deploy = false;
+            for (com.fasterxml.jackson.databind.JsonNode c : so.path("proposedCommands")) {
+                String cmd = c.asText("");
+                out.add(policy.evaluateAction(new ProposedAction(ActionType.RUN_COMMAND, cmd, false, 0, false)));
+                String lower = cmd.toLowerCase(java.util.Locale.ROOT);
+                deploy |= lower.contains("kubectl") || lower.contains("terraform") || lower.contains("deploy");
+            }
+            for (com.fasterxml.jackson.databind.JsonNode m : so.path("proposedMigrations")) {
+                out.add(policy.evaluateAction(new ProposedAction(ActionType.DESTRUCTIVE_DB, m.path("sql").asText(""),
+                        m.path("touchesNonTestData").asBoolean(false), 0, false)));
+            }
+            if (deploy) out.add(policy.evaluateAction(new ProposedAction(ActionType.DEPLOY_PRODUCTION, "deployment command", true, 0, false)));
+        } catch (JsonProcessingException e) {
+            // unreadable content is caught by the evaluator; nothing to evaluate here
+        }
+        return out;
     }
 
     private static int failedTests(Map<String, Object> testing) {
