@@ -12,7 +12,8 @@ public final class RunDtos {
     public record RunSummary(long id, String scenario, String requirement, String status, Instant createdAt) {}
 
     public record NodeView(String id, String name, String status, List<String> dependsOn, int level, int attempts,
-                           Instant startedAt, Instant completedAt, String errorSummary) {}
+                           Instant startedAt, Instant completedAt, String errorSummary,
+                           StageGates.Gates gates) {}
 
     public record RunDetail(long id, String scenario, String requirement, String status, Instant createdAt,
                             int planVersion, Instant startedAt, Instant completedAt, List<NodeView> nodes) {}

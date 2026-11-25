@@ -7,6 +7,11 @@ package com.example.shortener.orchestrator;
 public interface StageHandler {
     void execute(StageExecution execution) throws Exception;
 
+    /** True when the handler stores its output as an artifact (enables the artifact-based gate checks). */
+    default boolean producesArtifacts() {
+        return false;
+    }
+
     /** True when {@link #executeFallback} can complete a stage after the primary path kept failing transiently. */
     default boolean supportsFallback() {
         return false;

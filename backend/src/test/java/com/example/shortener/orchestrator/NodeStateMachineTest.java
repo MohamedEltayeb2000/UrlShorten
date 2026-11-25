@@ -9,14 +9,23 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 @Requirement("001-FR-003")
+@Requirement("001-FR-034")
 class NodeStateMachineTest {
+
+    @Test
+    void runningStageInterruptedBySafeStopMayReturnToReady() {
+        assertThat(NodeStateMachine.canTransition(RUNNING, READY)).isTrue();
+        assertThat(NodeStateMachine.canTransition(READY, RUNNING)).isTrue();
+        assertThat(NodeStateMachine.canTransition(SUCCEEDED, READY)).isFalse();
+    }
+
 
     /** Expected legal moves, written independently of the production table as "FROM>TO" strings. */
     private static final Set<String> EXPECTED = Set.of(
             "PENDING>READY", "PENDING>BLOCKED", "PENDING>SKIPPED", "PENDING>CANCELLED",
             "READY>RUNNING", "READY>BLOCKED", "READY>SKIPPED", "READY>CANCELLED",
             "RUNNING>SUCCEEDED", "RUNNING>FAILED", "RUNNING>RETRYING", "RUNNING>WAITING_FOR_APPROVAL",
-            "RUNNING>BLOCKED", "RUNNING>CANCELLED",
+            "RUNNING>BLOCKED", "RUNNING>CANCELLED", "RUNNING>READY",
             "RETRYING>RUNNING", "RETRYING>FAILED", "RETRYING>CANCELLED",
             "WAITING_FOR_APPROVAL>SUCCEEDED", "WAITING_FOR_APPROVAL>BLOCKED", "WAITING_FOR_APPROVAL>PENDING", "WAITING_FOR_APPROVAL>CANCELLED",
             "BLOCKED>READY", "BLOCKED>SKIPPED", "BLOCKED>PENDING", "BLOCKED>CANCELLED",

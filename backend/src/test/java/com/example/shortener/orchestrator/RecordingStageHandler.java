@@ -18,6 +18,7 @@ public class RecordingStageHandler implements StageHandler {
     private final Map<String, Integer> executions = new ConcurrentHashMap<>();
     private final Map<String, Long> delays = new ConcurrentHashMap<>();
     private final Set<String> failing = ConcurrentHashMap.newKeySet();
+    private final Set<String> holdingUntilCancelled = ConcurrentHashMap.newKeySet();
     private volatile long defaultDelayMs = 100;
     private volatile String gateNode;
     private volatile CountDownLatch gate;
@@ -27,10 +28,16 @@ public class RecordingStageHandler implements StageHandler {
         executions.clear();
         delays.clear();
         failing.clear();
+        holdingUntilCancelled.clear();
         defaultDelayMs = 100;
         gateNode = null;
         gate = null;
     }
+
+    /** The stage blocks until the run is no longer RUNNING, then throws {@link StageInterruptedException}; only its first invocation holds. */
+    public void holdUntilCancelled(String nodeId) { holdingUntilCancelled.add(nodeId); }
+
+    private boolean holdOnce(String nodeId) { return holdingUntilCancelled.remove(nodeId); }
 
     public void setDefaultDelayMs(long ms) { defaultDelayMs = ms; }
     public void delay(String nodeId, long ms) { delays.put(nodeId, ms); }
@@ -53,6 +60,10 @@ public class RecordingStageHandler implements StageHandler {
         long start = System.nanoTime();
         executions.merge(ex.nodeId(), 1, Integer::sum);
         try {
+            if (holdingUntilCancelled.contains(ex.nodeId()) && holdOnce(ex.nodeId())) {
+                while (!ex.cancelled().getAsBoolean()) Thread.sleep(20);
+                throw new StageInterruptedException("stopped by safe-stop: " + ex.nodeId());
+            }
             if (ex.nodeId().equals(gateNode) && gate != null && !gate.await(20, TimeUnit.SECONDS)) {
                 throw new IllegalStateException("gate never released");
             }
