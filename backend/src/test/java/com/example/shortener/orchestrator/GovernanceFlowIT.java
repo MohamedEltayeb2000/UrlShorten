@@ -1,5 +1,6 @@
 package com.example.shortener.orchestrator;
 
+import com.example.shortener.support.ChangeRecords;
 import static com.example.shortener.orchestrator.RunTestSupport.await;
 import static com.example.shortener.orchestrator.RunTestSupport.terminal;
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,7 +57,7 @@ class GovernanceFlowIT {
     }
 
     private ApprovalService.DecisionRequest approve(String node) {
-        return new ApprovalService.DecisionRequest(node, "APPROVE", "looks good", null);
+        return ChangeRecords.req(node, "APPROVE", "looks good", null);
     }
 
     @Test
@@ -96,11 +97,11 @@ class GovernanceFlowIT {
         awaitStatus(id, "WAITING_FOR_APPROVAL");
 
         ApiException noComment = assertThrows(ApiException.class, () -> approvalService.decide(id,
-                new ApprovalService.DecisionRequest("IMPLEMENTATION", "REJECT", "  ", null), HUMAN));
+                ChangeRecords.req("IMPLEMENTATION", "REJECT", "  ", null), HUMAN));
         assertEquals("COMMENT_REQUIRED", noComment.code());
 
         ApprovalService.ApprovalView v = approvalService.decide(id,
-                new ApprovalService.DecisionRequest("IMPLEMENTATION", "REJECT", "needs input validation first", null), HUMAN);
+                ChangeRecords.req("IMPLEMENTATION", "REJECT", "needs input validation first", null), HUMAN);
         assertEquals("REJECTED", v.status());
         assertEquals("needs input validation first", v.comment());
 
@@ -136,7 +137,7 @@ class GovernanceFlowIT {
         assertTrue(pending.openQuestions().size() >= 3, "the questions are shown to the reviewer");
         assertFalse(pending.assumptions().isEmpty());
 
-        approvalService.decide(id, new ApprovalService.DecisionRequest("REQUIREMENTS_ANALYSIS", "APPROVE",
+        approvalService.decide(id, ChangeRecords.req("REQUIREMENTS_ANALYSIS", "APPROVE",
                 "proceed with the stated safe assumptions", pending.artifactVersion()), HUMAN);
         d = awaitStatus(id, "WAITING_FOR_APPROVAL", "SUCCEEDED");
         assertEquals("SUCCEEDED", status(d, "REQUIREMENTS_ANALYSIS"));

@@ -1,5 +1,6 @@
 package com.example.shortener.summary;
 
+import com.example.shortener.support.ChangeRecords;
 import static com.example.shortener.orchestrator.RunTestSupport.await;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,9 +38,9 @@ class EngineeringSummaryTest {
         long id = runs.create("Build a URL shortener API with link creation, redirects, expiration, and click analytics.", "GREENFIELD").id();
         runs.start(id);
         awaitStatus(id, "WAITING_FOR_APPROVAL");
-        approvals.decide(id, new ApprovalService.DecisionRequest("IMPLEMENTATION", "APPROVE", "patch looks fine", null), HUMAN);
+        approvals.decide(id, ChangeRecords.req("IMPLEMENTATION", "APPROVE", "patch looks fine", null), HUMAN);
         awaitStatus(id, "WAITING_FOR_APPROVAL");
-        approvals.decide(id, new ApprovalService.DecisionRequest("RELEASE_READINESS", "APPROVE", "ready to release", null), HUMAN);
+        approvals.decide(id, ChangeRecords.req("RELEASE_READINESS", "APPROVE", "ready to release", null), HUMAN);
         awaitStatus(id, "SUCCEEDED");
         return id;
     }

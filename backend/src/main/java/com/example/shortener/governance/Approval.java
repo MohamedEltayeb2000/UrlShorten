@@ -41,6 +41,21 @@ public class Approval {
     @Column(name = "artifact_version")
     private Integer artifactVersion;
 
+    @Column(name = "risk_class", length = 8)
+    private String riskClass;
+
+    @Column(name = "change_ticket", length = 64)
+    private String changeTicket;
+
+    @Column(name = "risk_justification", length = 1000)
+    private String riskJustification;
+
+    @Column(name = "proposed_commands", length = 2000)
+    private String proposedCommands;
+
+    @Column(name = "proposed_migrations", length = 2000)
+    private String proposedMigrations;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -50,11 +65,28 @@ public class Approval {
     protected Approval() {}
 
     public Approval(Long runId, String nodeId, Kind kind, String policyReason, Integer artifactVersion) {
+        this(runId, nodeId, kind, policyReason, artifactVersion, null);
+    }
+
+    /** A null risk class is derived from the kind: HIGH_IMPACT_ACTION is HIGH, everything else MEDIUM. */
+    public Approval(Long runId, String nodeId, Kind kind, String policyReason, Integer artifactVersion, String riskClass) {
+        this.riskClass = riskClass != null ? riskClass : kind == Kind.HIGH_IMPACT_ACTION ? "HIGH" : "MEDIUM";
         this.runId = runId;
         this.nodeId = nodeId;
         this.kind = kind;
         this.policyReason = policyReason == null ? null : policyReason.substring(0, Math.min(500, policyReason.length()));
         this.artifactVersion = artifactVersion;
+    }
+
+    /** The commands and migrations the stage proposes, shown to the approver (JSON text). */
+    public void setProposals(String commands, String migrations) {
+        this.proposedCommands = commands == null ? null : commands.substring(0, Math.min(2000, commands.length()));
+        this.proposedMigrations = migrations == null ? null : migrations.substring(0, Math.min(2000, migrations.length()));
+    }
+
+    public void recordChange(String ticket, String justification) {
+        this.changeTicket = ticket;
+        this.riskJustification = justification == null ? null : justification.substring(0, Math.min(1000, justification.length()));
     }
 
     /** Records the decision. Only a PENDING approval can be decided. */
@@ -84,6 +116,11 @@ public class Approval {
     public String getComment() { return comment; }
     public String getPolicyReason() { return policyReason; }
     public Integer getArtifactVersion() { return artifactVersion; }
+    public String getRiskClass() { return riskClass; }
+    public String getChangeTicket() { return changeTicket; }
+    public String getRiskJustification() { return riskJustification; }
+    public String getProposedCommands() { return proposedCommands; }
+    public String getProposedMigrations() { return proposedMigrations; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getDecidedAt() { return decidedAt; }
 }

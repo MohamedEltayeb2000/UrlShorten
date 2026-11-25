@@ -47,6 +47,15 @@ public class ImplementerAgent extends BaseMockAgent {
                     "diff", genericDiff(file, links));
         }
         out.put("proposal", proposal);
+        // Declared so the policy engine and the approver see them; nothing here is ever run or applied.
+        out.put("proposedCommands", List.of("mvn -q test"));
+        out.put("proposedMigrations", List.of(isScenario(in, BROWNFIELD)
+                ? map("name", "V2__add_idempotency_keys",
+                        "sql", "create table idempotency_keys (idempotency_key varchar(128) not null, fingerprint varchar(64) not null, link_id bigint not null)",
+                        "touchesNonTestData", Boolean.FALSE, "destructive", Boolean.FALSE)
+                : map("name", "V2__add_feature_table",
+                        "sql", "alter table feature_flag add column enabled boolean default false",
+                        "touchesNonTestData", Boolean.FALSE, "destructive", Boolean.FALSE)));
         out.put("applied", Boolean.FALSE);
         return ok(in, "Proposed a change set (not applied): " + proposal.get("summary"), out,
                 List.of("A human reviews the diff before anything is applied"), risks,

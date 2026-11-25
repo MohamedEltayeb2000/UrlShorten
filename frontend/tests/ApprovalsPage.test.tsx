@@ -25,6 +25,7 @@ const pending = [
     openQuestions: ['Which database?'],
     assumptions: ['Single region'],
     policyReason: 'Ambiguous scenario',
+    riskClass: 'MEDIUM',
     createdAt: '2026-11-24T10:00:00Z',
   },
   {
@@ -34,6 +35,7 @@ const pending = [
     nodeName: 'Deploy',
     kind: 'HIGH_IMPACT_ACTION',
     reason: 'Deploys to prod',
+    riskClass: 'HIGH',
     createdAt: '2026-11-24T11:00:00Z',
   },
 ]
@@ -71,6 +73,8 @@ describe('ApprovalsPage', () => {
     expect(c.getByText('Which database?')).toBeInTheDocument()
     expect(c.getByText('Single region')).toBeInTheDocument()
     expect(c.getByText(/Ambiguous scenario/)).toBeInTheDocument()
+    expect(c.getByText('Risk class: MEDIUM')).toBeInTheDocument()
+    expect(c.queryByLabelText('Change ticket')).not.toBeInTheDocument()
     expect(c.getByRole('link', { name: /artifacts for run 7/i })).toHaveAttribute('href', '/runs/7/artifacts')
     expect(screen.getByRole('article', { name: /Run #8/ })).toBeInTheDocument()
   })

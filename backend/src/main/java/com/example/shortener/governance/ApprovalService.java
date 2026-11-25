@@ -21,13 +21,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class ApprovalService {
     public record ApprovalView(Long id, String nodeId, String status, String actorId, String comment, String policyReason,
-                               Integer artifactVersion, Instant createdAt, Instant decidedAt) {}
+                               Integer artifactVersion, Instant createdAt, Instant decidedAt, String riskClass,
+                               String changeTicket, String riskJustification, String proposedCommands, String proposedMigrations) {}
 
     public record PendingApproval(Long approvalId, Long runId, String nodeId, String nodeName, String kind, String reason,
                                   String artifactType, Integer artifactVersion, String summary, List<String> openQuestions,
-                                  List<String> assumptions, String policyReason, Instant createdAt) {}
+                                  List<String> assumptions, String policyReason, Instant createdAt, String riskClass,
+                                  String changeTicket, String riskJustification, String proposedCommands, String proposedMigrations) {}
 
-    public record DecisionRequest(String nodeId, String decision, String comment, Integer artifactVersion) {}
+    public record DecisionRequest(String nodeId, String decision, String comment, Integer artifactVersion,
+                                  String changeTicket, String riskJustification) {
+        public DecisionRequest(String nodeId, String decision, String comment, Integer artifactVersion) {
+            this(nodeId, decision, comment, artifactVersion, null, null);
+        }
+    }
+
+    static final java.util.regex.Pattern TICKET = java.util.regex.Pattern.compile("[A-Za-z][A-Za-z0-9]*-[0-9]{1,8}");
 
     private final ApprovalRepository approvals;
     private final RunControlService control;
@@ -74,8 +83,27 @@ public class ApprovalService {
                     "The artifact changed (now v" + artifact.get().getVersion() + "); review it and decide again");
         }
 
+        enrich(pending);
+        String ticket = req.changeTicket() == null ? null : req.changeTicket().strip();
+        String justification = req.riskJustification() == null ? null : req.riskJustification().strip();
+        if (approve && "HIGH".equals(pending.getRiskClass())) {
+            if (ticket == null || !TICKET.matcher(ticket).matches()) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "CHANGE_RECORD_REQUIRED",
+                        "A change ticket such as CHG-1042 is required to approve a HIGH-risk change");
+            }
+            if (justification == null || justification.length() < 10) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "CHANGE_RECORD_REQUIRED",
+                        "A risk justification of at least 10 characters is required to approve a HIGH-risk change");
+            }
+        }
+        if (approve && ticket != null && !ticket.isEmpty()) pending.recordChange(ticket, justification);
         pending.decide(approve ? Approval.Status.APPROVED : Approval.Status.REJECTED, actor.id(), comment);
         approvals.save(pending);
+        if (pending.getChangeTicket() != null) {
+            String j = pending.getRiskJustification() == null ? "" : pending.getRiskJustification();
+            audit.append(runId, actor.type().name(), actor.id(), "CHANGE_RECORD", req.nodeId() + ": ticket " + pending.getChangeTicket()
+                    + ", risk " + pending.getRiskClass() + ", justification: " + j.substring(0, Math.min(300, j.length())), null);
+        }
         audit.append(runId, actor.type().name(), actor.id(), approve ? "APPROVAL_APPROVED" : "APPROVAL_REJECTED",
                 req.nodeId() + (pending.getArtifactVersion() == null ? "" : " v" + pending.getArtifactVersion()) + ": " + comment, null);
         if (approve && pending.getPolicyReason() != null && pending.getPolicyReason().startsWith("failing-tests-block-release")) {
@@ -89,12 +117,13 @@ public class ApprovalService {
     }
 
     public List<ApprovalView> forRun(long runId) {
-        return approvals.findByRunIdOrderByIdAsc(runId).stream().map(ApprovalService::view).toList();
+        return approvals.findByRunIdOrderByIdAsc(runId).stream().peek(this::enrich).map(ApprovalService::view).toList();
     }
 
     public List<PendingApproval> pending() {
         List<PendingApproval> out = new ArrayList<>();
         for (Approval a : approvals.findByStatusOrderByIdAsc(Approval.Status.PENDING)) {
+            enrich(a);
             String name = nodes.findByRunIdAndNodeId(a.getRunId(), a.getNodeId()).map(RunNode::getName).orElse(a.getNodeId());
             String type = AgentStageHandler.ARTIFACT_TYPES.get(a.getNodeId());
             Optional<Artifact> art = type == null ? Optional.empty() : artifacts.current(a.getRunId(), a.getNodeId(), type);
@@ -113,7 +142,8 @@ public class ApprovalService {
             }
             out.add(new PendingApproval(a.getId(), a.getRunId(), a.getNodeId(), name, a.getKind().name(),
                     a.getPolicyReason() == null ? "decision required" : a.getPolicyReason(), type,
-                    art.map(Artifact::getVersion).orElse(null), summary, questions, assumptions, a.getPolicyReason(), a.getCreatedAt()));
+                    art.map(Artifact::getVersion).orElse(null), summary, questions, assumptions, a.getPolicyReason(), a.getCreatedAt(),
+                    a.getRiskClass(), a.getChangeTicket(), a.getRiskJustification(), a.getProposedCommands(), a.getProposedMigrations()));
         }
         return out;
     }
@@ -126,6 +156,26 @@ public class ApprovalService {
 
     private static ApprovalView view(Approval a) {
         return new ApprovalView(a.getId(), a.getNodeId(), a.getStatus().name(), a.getActorId(), a.getComment(),
-                a.getPolicyReason(), a.getArtifactVersion(), a.getCreatedAt(), a.getDecidedAt());
+                a.getPolicyReason(), a.getArtifactVersion(), a.getCreatedAt(), a.getDecidedAt(), a.getRiskClass(),
+                a.getChangeTicket(), a.getRiskJustification(), a.getProposedCommands(), a.getProposedMigrations());
+    }
+
+    /** Copies the stage artifact's proposed commands and migrations onto a pending approval (once) so approvers see them. */
+    private void enrich(Approval a) {
+        if (a.getStatus() != Approval.Status.PENDING || a.getProposedCommands() != null || a.getProposedMigrations() != null) return;
+        String type = AgentStageHandler.ARTIFACT_TYPES.get(a.getNodeId());
+        if (type == null) return;
+        try {
+            Optional<Artifact> art = artifacts.current(a.getRunId(), a.getNodeId(), type);
+            if (art.isEmpty()) return;
+            JsonNode so = mapper.readTree(art.get().getContent()).path("structuredOutput");
+            JsonNode cmds = so.path("proposedCommands");
+            JsonNode migs = so.path("proposedMigrations");
+            if (!cmds.isArray() && !migs.isArray()) return;
+            a.setProposals(cmds.isArray() ? mapper.writeValueAsString(cmds) : null, migs.isArray() ? mapper.writeValueAsString(migs) : null);
+            approvals.save(a);
+        } catch (Exception ignored) {
+            // unreadable artifact: show the approval without the change details
+        }
     }
 }
