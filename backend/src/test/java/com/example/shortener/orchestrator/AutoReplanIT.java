@@ -44,7 +44,7 @@ class AutoReplanIT {
     }
 
     private void approve(long id, String node) {
-        approvalService.decide(id, new ApprovalService.DecisionRequest(node, "APPROVE", "looks good", null), HUMAN);
+        approvalService.decide(id, com.example.shortener.support.ChangeRecords.req(node, "APPROVE", "looks good", null), HUMAN);
     }
 
     private long completedRun() throws Exception {
