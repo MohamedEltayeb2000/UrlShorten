@@ -92,7 +92,8 @@ class AgentRunIT {
             var a = attempts.findByRunNodeIdOrderByAttemptAsc(n.getId());
             assertEquals(1, a.size(), n.getNodeId());
             assertEquals("mock", a.get(0).getProviderUsed());
-            assertEquals("SUCCEEDED", a.get(0).getStatus());
+            // stages behind a human gate end their attempt as WAITING_FOR_APPROVAL; the node itself is SUCCEEDED after approval
+            assertEquals(n.isRequiresApproval() ? "WAITING_FOR_APPROVAL" : "SUCCEEDED", a.get(0).getStatus(), n.getNodeId());
         }
     }
 

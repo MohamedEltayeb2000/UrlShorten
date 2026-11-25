@@ -66,4 +66,22 @@ class ScenarioPipelineEvalIT {
         assertFalse(e.passed());
         assertTrue(e.failedCriteria().contains("no_unsafe_content"));
     }
+
+    @Test
+    void simulatedFallbackOutputIsLabeledAndStillScoresAtTheThreshold() {
+        AgentInput in = new AgentInput("ARCHITECTURE_DESIGN", "GREENFIELD", "Build links", "Build links",
+                Map.of("TASK_DECOMPOSITION", Map.of("tasks", List.of())), List.of());
+        AgentResult real = provider.forStage("ARCHITECTURE_DESIGN").run(in);
+        AgentResult fallback = new AgentResult(real.agentName(), AgentStatus.FALLBACK, real.summary(), real.structuredOutput(),
+                real.assumptions(), real.risks(), real.openQuestions(), real.recommendedNextActions(), real.confidence(),
+                real.confidenceNote(), real.referencesToInputs(), true);
+        assertTrue(evaluator.evaluate(in, fallback, fallback).passed(), "a labeled fallback is acceptable output");
+
+        AgentResult unlabeled = new AgentResult(real.agentName(), AgentStatus.FALLBACK, real.summary(), real.structuredOutput(),
+                real.assumptions(), real.risks(), real.openQuestions(), real.recommendedNextActions(), real.confidence(),
+                real.confidenceNote(), real.referencesToInputs(), false);
+        OutputEvaluation bad = evaluator.evaluate(in, unlabeled, unlabeled);
+        assertFalse(bad.passed());
+        assertTrue(bad.failedCriteria().contains("labeled_simulated"), "fallback output must be labeled as simulated");
+    }
 }
