@@ -118,7 +118,7 @@ class StageGatesIT {
             var pending = approvalService.pending().stream().filter(p -> p.runId() == id && p.kind().equals("HIGH_IMPACT_ACTION")).toList();
             if (pending.isEmpty()) break;
             for (var p : pending) {
-                approvalService.decide(id, new ApprovalService.DecisionRequest(p.nodeId(), "APPROVE", "reviewed in test", p.artifactVersion()), reviewer);
+                approvalService.decide(id, com.example.shortener.support.ChangeRecords.req(p.nodeId(), "APPROVE", "reviewed in test", p.artifactVersion()), reviewer);
             }
         }
         await(() -> terminal(service.detail(id).status()), Duration.ofSeconds(30), "run to finish");

@@ -63,6 +63,6 @@ abstract class ScenarioSupport {
     }
 
     protected List<String> eventTypes(long runId) {
-        return audit.events(runId, 0, 100).items().stream().map(AuditEvent::getEventType).toList();
+        return com.example.shortener.support.AuditTestSupport.types(audit, runId);
     }
 }

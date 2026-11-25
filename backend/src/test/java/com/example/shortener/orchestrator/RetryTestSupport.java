@@ -25,6 +25,6 @@ abstract class RetryTestSupport {
     }
 
     List<String> events(long id) {
-        return audit.events(id, 0, 100).items().stream().map(AuditEvent::getEventType).toList();
+        return com.example.shortener.support.AuditTestSupport.types(audit, id);
     }
 }

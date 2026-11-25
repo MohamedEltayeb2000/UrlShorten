@@ -71,7 +71,7 @@ class AutoReplanIT {
     }
 
     private List<String> events(long id) {
-        return audit.events(id, 0, 200).items().stream().map(AuditEvent::getEventType).toList();
+        return com.example.shortener.support.AuditTestSupport.types(audit, id);
     }
 
     @Test
