@@ -1,5 +1,6 @@
 package com.example.shortener.scenarios;
 
+import com.example.shortener.support.ChangeRecords;
 import static com.example.shortener.orchestrator.RunTestSupport.await;
 import static com.example.shortener.orchestrator.RunTestSupport.terminal;
 
@@ -51,7 +52,7 @@ abstract class ScenarioSupport {
             for (var p : pending) {
                 prompts.add(p.kind() + ":" + p.nodeId());
                 if (p.kind().equals("CLARIFICATION") && !approveClarification) continue;
-                approvals.decide(id, new ApprovalService.DecisionRequest(p.nodeId(), "APPROVE", "reviewed in test", p.artifactVersion()), REVIEWER);
+                approvals.decide(id, ChangeRecords.req(p.nodeId(), "APPROVE", "reviewed in test", p.artifactVersion()), REVIEWER);
                 decided = true;
             }
             if (!decided) break;

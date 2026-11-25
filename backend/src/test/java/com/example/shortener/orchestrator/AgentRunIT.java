@@ -1,5 +1,6 @@
 package com.example.shortener.orchestrator;
 
+import com.example.shortener.support.ChangeRecords;
 import static com.example.shortener.orchestrator.RunTestSupport.await;
 import static com.example.shortener.orchestrator.RunTestSupport.terminal;
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,7 +51,7 @@ class AgentRunIT {
             var pending = approvalService.pending().stream().filter(p -> p.runId() == id && p.kind().equals("HIGH_IMPACT_ACTION")).toList();
             if (pending.isEmpty()) break;
             for (var p : pending) {
-                approvalService.decide(id, new ApprovalService.DecisionRequest(p.nodeId(), "APPROVE", "reviewed in test", p.artifactVersion()), reviewer);
+                approvalService.decide(id, ChangeRecords.req(p.nodeId(), "APPROVE", "reviewed in test", p.artifactVersion()), reviewer);
             }
         }
         await(() -> {

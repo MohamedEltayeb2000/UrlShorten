@@ -117,6 +117,16 @@ public class AgentStageHandler implements StageHandler {
         Agent agent = source.forStage(ex.nodeId());
         AgentResult raw = agent.run(input);
         AgentResult result = fallback ? asFallback(raw) : raw;
+        // Policy: proposed commands, migrations and deployments (IMPLEMENTATION). Every decision is recorded; a DENY holds
+        // the output before it is evaluated or stored.
+        List<PolicyDecision> proposalDecisions = proposalDecisions(ex, result.structuredOutput());
+        for (PolicyDecision d : proposalDecisions) decisions.save(new PolicyDecisionRecord(ex.runId(), ex.nodeId(), d));
+        for (PolicyDecision d : proposalDecisions) {
+            if (d.outcome() == PolicyOutcome.DENY) {
+                audit.append(ex.runId(), "SYSTEM", "policy", "POLICY_DENIED", ex.nodeId() + ": " + d.rule(), null);
+                throw new HeldForReviewException("Output of " + ex.nodeId() + " violates policy " + d.rule());
+            }
+        }
         OutputEvaluation evaluation = evaluator.evaluate(input, result,
                 !source.deterministic() ? result : fallback ? asFallback(agent.run(input)) : agent.run(input));
         if (!evaluation.passed()) {
@@ -132,16 +142,6 @@ public class AgentStageHandler implements StageHandler {
         for (PolicyDecision d : policy.evaluateText(content)) {
             if (d.outcome() == PolicyOutcome.DENY) {
                 decisions.save(new PolicyDecisionRecord(ex.runId(), ex.nodeId(), d));
-                audit.append(ex.runId(), "SYSTEM", "policy", "POLICY_DENIED", ex.nodeId() + ": " + d.rule(), null);
-                throw new HeldForReviewException("Output of " + ex.nodeId() + " violates policy " + d.rule());
-            }
-        }
-
-        // Policy: proposed commands, migrations and deployments (IMPLEMENTATION). Every decision is recorded; a DENY holds the output.
-        List<PolicyDecision> proposalDecisions = proposalDecisions(ex, content);
-        for (PolicyDecision d : proposalDecisions) decisions.save(new PolicyDecisionRecord(ex.runId(), ex.nodeId(), d));
-        for (PolicyDecision d : proposalDecisions) {
-            if (d.outcome() == PolicyOutcome.DENY) {
                 audit.append(ex.runId(), "SYSTEM", "policy", "POLICY_DENIED", ex.nodeId() + ": " + d.rule(), null);
                 throw new HeldForReviewException("Output of " + ex.nodeId() + " violates policy " + d.rule());
             }
@@ -175,12 +175,13 @@ public class AgentStageHandler implements StageHandler {
     }
 
     /** Evaluates the high-impact action this stage represents (patch proposal, release readiness), if any. */
-    private PolicyDecision actionDecision(StageExecution ex, RunNode node, Map<String, Map<String, Object>> upstream, String content) {
+    private PolicyDecision actionDecision(StageExecution ex, RunNode node, Map<String, Map<String, Object>> upstream, String content)
+            throws JsonProcessingException {
         switch (ex.nodeId()) {
             case "IMPLEMENTATION": {
                 PolicyDecision patch = policy.evaluateAction(new ProposedAction(ActionType.APPLY_PATCH, content, false, 0, false));
                 StringBuilder reason = new StringBuilder(patch.reason());
-                for (PolicyDecision d : proposalDecisions(ex, content)) {
+                for (PolicyDecision d : proposalDecisions(ex, structuredOutputOf(content))) {
                     if (d.outcome() == PolicyOutcome.REQUIRE_APPROVAL) reason.append("; ").append(d.rule()).append(": ").append(d.reason());
                 }
                 return new PolicyDecision(patch.rule(), patch.outcome(), reason.toString(), patch.policyVersion());
@@ -195,11 +196,11 @@ public class AgentStageHandler implements StageHandler {
     }
 
     /** Policy decisions for the commands, migrations and deployment an IMPLEMENTATION output proposes (empty for other stages). */
-    private List<PolicyDecision> proposalDecisions(StageExecution ex, String content) {
+    private List<PolicyDecision> proposalDecisions(StageExecution ex, Map<String, Object> structuredOutput) {
         List<PolicyDecision> out = new ArrayList<>();
-        if (!"IMPLEMENTATION".equals(ex.nodeId())) return out;
-        try {
-            com.fasterxml.jackson.databind.JsonNode so = mapper.readTree(content).path("structuredOutput");
+        if (!"IMPLEMENTATION".equals(ex.nodeId()) || structuredOutput == null) return out;
+        {
+            com.fasterxml.jackson.databind.JsonNode so = mapper.valueToTree(structuredOutput);
             boolean deploy = false;
             for (com.fasterxml.jackson.databind.JsonNode c : so.path("proposedCommands")) {
                 String cmd = c.asText("");
@@ -212,8 +213,6 @@ public class AgentStageHandler implements StageHandler {
                         m.path("touchesNonTestData").asBoolean(false), 0, false)));
             }
             if (deploy) out.add(policy.evaluateAction(new ProposedAction(ActionType.DEPLOY_PRODUCTION, "deployment command", true, 0, false)));
-        } catch (JsonProcessingException e) {
-            // unreadable content is caught by the evaluator; nothing to evaluate here
         }
         return out;
     }

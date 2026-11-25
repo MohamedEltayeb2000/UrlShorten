@@ -1,5 +1,6 @@
 package com.example.shortener.orchestrator;
 
+import com.example.shortener.support.ChangeRecords;
 import static com.example.shortener.orchestrator.RunTestSupport.await;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -74,7 +75,7 @@ class FailingTestsReleaseIT {
         long id = service.create("Build a URL shortener API", "GREENFIELD").id();
         service.start(id);
         waitWaiting(id);
-        approvals.decide(id, new ApprovalService.DecisionRequest("IMPLEMENTATION", "APPROVE", "patch reviewed", null), alice);
+        approvals.decide(id, ChangeRecords.req("IMPLEMENTATION", "APPROVE", "patch reviewed", null), alice);
         waitWaiting(id);
 
         var pending = approvals.pending().stream().filter(p -> p.runId() == id).findFirst().orElseThrow();
@@ -83,7 +84,7 @@ class FailingTestsReleaseIT {
         assertTrue(policyDecisions.findByRunIdOrderByIdAsc(id).stream()
                 .anyMatch(p -> p.getRule().equals("failing-tests-block-release") && p.getOutcome() == PolicyOutcome.DENY));
 
-        approvals.decide(id, new ApprovalService.DecisionRequest("RELEASE_READINESS", "APPROVE", "accepted risk: flaky suite, ticket filed", null), alice);
+        approvals.decide(id, ChangeRecords.req("RELEASE_READINESS", "APPROVE", "accepted risk: flaky suite, ticket filed", null), alice);
         await(() -> service.detail(id).status().equals("SUCCEEDED"), Duration.ofSeconds(30), "run to finish");
 
         List<AuditEvent> ev = audit.events(id, 0, 100).items();
@@ -99,9 +100,9 @@ class FailingTestsReleaseIT {
         long id = service.create("Build a URL shortener API", "GREENFIELD").id();
         service.start(id);
         waitWaiting(id);
-        approvals.decide(id, new ApprovalService.DecisionRequest("IMPLEMENTATION", "APPROVE", "ok", null), alice);
+        approvals.decide(id, ChangeRecords.req("IMPLEMENTATION", "APPROVE", "ok", null), alice);
         waitWaiting(id);
-        approvals.decide(id, new ApprovalService.DecisionRequest("RELEASE_READINESS", "REJECT", "fix the failing tests first", null), alice);
+        approvals.decide(id, ChangeRecords.req("RELEASE_READINESS", "REJECT", "fix the failing tests first", null), alice);
         RunDtos.RunDetail d = service.detail(id);
         assertEquals("BLOCKED", d.nodes().stream().filter(n -> n.id().equals("RELEASE_READINESS")).findFirst().orElseThrow().status());
         assertNotEquals("SUCCEEDED", d.status());

@@ -1,5 +1,6 @@
 package com.example.shortener.perf;
 
+import com.example.shortener.support.ChangeRecords;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.example.shortener.support.RepoFiles;
@@ -39,7 +40,7 @@ class ScenarioDemoPerfIT {
                 String status = service.detail(id).status();
                 if (status.equals("SUCCEEDED") || status.equals("FAILED")) break;
                 for (var p : approvals.pending().stream().filter(x -> x.runId() == id).toList()) {
-                    approvals.decide(id, new ApprovalService.DecisionRequest(p.nodeId(), "APPROVE", "perf run", p.artifactVersion()), reviewer);
+                    approvals.decide(id, ChangeRecords.req(p.nodeId(), "APPROVE", "perf run", p.artifactVersion()), reviewer);
                 }
             }
             assertEquals("SUCCEEDED", service.detail(id).status(), scenario);

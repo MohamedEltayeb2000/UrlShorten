@@ -38,7 +38,8 @@ class GovernanceSecurityTest {
     }
 
     private static String body(String node, String decision, String comment) {
-        return "{\"nodeId\":\"" + node + "\",\"decision\":\"" + decision + "\",\"comment\":\"" + comment + "\"}";
+        return "{\"nodeId\":\"" + node + "\",\"decision\":\"" + decision + "\",\"comment\":\"" + comment
+                + "\",\"changeTicket\":\"CHG-1042\",\"riskJustification\":\"reviewed in test, low blast radius\"}";
     }
 
     @Test
