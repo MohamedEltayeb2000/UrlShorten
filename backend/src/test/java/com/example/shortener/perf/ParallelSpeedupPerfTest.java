@@ -29,7 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 @Tag("perf")
 @Requirement("002-FR-015")
 class ParallelSpeedupPerfTest {
-    static final long STAGE_MS = 400; // long enough that fixed scheduling overhead does not dominate
+    static final long STAGE_MS = 600; // long enough that fixed scheduling and audit overhead does not dominate
 
     @TestConfiguration
     static class Cfg {

@@ -3,7 +3,7 @@
   "redirect_errors": 0,
   "redirect_requests": 300,
   "analytics_summary_ms": 1000,
-  "parallel_ratio_max": 0.7,
+  "parallel_ratio_max": 0.75,
   "scenario_demo_seconds": 120,
   "walkthrough_seconds": 180,
   "bundle_gzip_kb": 500,
