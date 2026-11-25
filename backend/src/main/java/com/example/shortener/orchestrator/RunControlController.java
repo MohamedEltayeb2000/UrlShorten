@@ -15,8 +15,11 @@ public class RunControlController {
     private final RunControlService control;
     private final ActorResolver actors;
 
-    public RunControlController(RunControlService control, ActorResolver actors) {
+    private final ChangeDetectionService changes;
+
+    public RunControlController(RunControlService control, ActorResolver actors, ChangeDetectionService changes) {
         this.control = control;
+        this.changes = changes;
         this.actors = actors;
     }
 
@@ -28,6 +31,11 @@ public class RunControlController {
     @PostMapping("/replan")
     public RunDtos.RunDetail replan(@PathVariable long runId, @RequestBody ReplanRequest req, HttpServletRequest request) {
         return control.replan(runId, req.nodeId(), req.requirement(), actors.resolve(request));
+    }
+
+    @PutMapping("/artifacts")
+    public ArtifactView edit(@PathVariable long runId, @RequestBody ChangeDetectionService.EditRequest req, HttpServletRequest request) {
+        return ArtifactView.of(changes.edit(runId, req, actors.resolve(request)));
     }
 
     @PostMapping("/rollback")

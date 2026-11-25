@@ -29,10 +29,13 @@ public class RunControlService {
     private final AuditService audit;
     private final ApprovalRepository approvals;
     private final Workflows workflows;
+    private final ChangeDetectionService changeDetection;
 
     public RunControlService(RunScheduler scheduler, RunService runService, AgentRunRepository runs, RunNodeRepository nodes,
                              RunTransitions transitions, ArtifactService artifacts, AuditService audit,
-                             ApprovalRepository approvals, Workflows workflows) {
+                             ApprovalRepository approvals, Workflows workflows,
+                             @org.springframework.context.annotation.Lazy ChangeDetectionService changeDetection) {
+        this.changeDetection = changeDetection;
         this.scheduler = scheduler;
         this.runService = runService;
         this.runs = runs;
@@ -91,39 +94,58 @@ public class RunControlService {
                             "Stage " + n.getNodeId() + " is " + n.getStatus() + "; pause the run and let running stages finish first");
                 }
             }
-            if (newRequirement != null && !newRequirement.isBlank()) {
-                String req = RunService.validateRequirement(newRequirement);
-                run.setRequirement(req, req.replaceAll("\\s+", " "));
-            }
-            List<Long> staleIds = new ArrayList<>();
-            for (String id : closure) {
-                String type = AgentStageHandler.ARTIFACT_TYPES.get(id);
-                if (type != null) artifacts.current(runId, id, type).ifPresent(a -> staleIds.add(a.getId()));
-            }
-            artifacts.markStale(staleIds);
-            for (RunNode n : all) {
-                if (closure.contains(n.getNodeId()) && n.getStatus() != NodeStatus.PENDING) requeue(n, "re-planned from " + nodeId + " by " + actor.id());
-            }
-            supersedePending(runId, closure, "stage was re-planned");
-            run.setPlanVersion(run.getPlanVersion() + 1);
-            audit.append(runId, actor.type().name(), actor.id(), "RUN_REPLANNED",
-                    "plan v" + run.getPlanVersion() + " from " + nodeId + "; affected: " + closure + "; stale artifacts: " + staleIds.size(), null);
-            if (run.getStatus() != RunStatus.CREATED) resume(run); else runs.save(run);
-            if (run.getStatus() == RunStatus.RUNNING) scheduler.kickLocked(runId);
+            applyReplan(run, all, closure, nodeId, newRequirement, actor, "RUN_REPLANNED",
+                    "re-planned from " + nodeId + " by " + actor.id());
             return null;
         });
         return runService.detail(runId);
     }
 
-    /** Restores a prior version of an artifact; nothing is deleted. Downstream results are NOT changed: re-plan to refresh them. */
+    /**
+     * Shared re-plan internals (run lock held): marks the closure's CURRENT artifacts stale, re-queues its nodes,
+     * supersedes pending approvals, bumps the plan version, audits under {@code auditType} and resumes scheduling.
+     */
+    void applyReplan(AgentRun run, List<RunNode> all, Set<String> closure, String origin, String newRequirement,
+                     Actor actor, String auditType, String requeueReason) {
+        long runId = run.getId();
+        if (newRequirement != null && !newRequirement.isBlank()) {
+            String req = RunService.validateRequirement(newRequirement);
+            run.setRequirement(req, req.replaceAll("\\s+", " "));
+        }
+        List<Long> staleIds = new ArrayList<>();
+        for (String id : closure) {
+            String type = AgentStageHandler.ARTIFACT_TYPES.get(id);
+            if (type != null) artifacts.current(runId, id, type).ifPresent(a -> staleIds.add(a.getId()));
+        }
+        artifacts.markStale(staleIds);
+        for (RunNode n : all) {
+            if (closure.contains(n.getNodeId()) && n.getStatus() != NodeStatus.PENDING) requeue(n, requeueReason);
+        }
+        supersedePending(runId, closure, "stage was re-planned");
+        run.setPlanVersion(run.getPlanVersion() + 1);
+        audit.append(runId, actor.type().name(), actor.id(), auditType,
+                "plan v" + run.getPlanVersion() + " from " + origin + "; affected: " + closure + "; stale artifacts: " + staleIds.size(), null);
+        if (run.getStatus() != RunStatus.CREATED) resume(run); else runs.save(run);
+        if (run.getStatus() == RunStatus.RUNNING) scheduler.kickLocked(runId);
+    }
+
+    /**
+     * Restores a prior version of an artifact; nothing is deleted. When the restored version changes the stage's CURRENT
+     * artifact, downstream stages are re-planned automatically (001-FR-032).
+     */
     public Artifact rollback(long runId, String nodeId, String type, int version, Actor actor) {
-        return scheduler.locked(runId, () -> {
+        boolean[] changed = {false};
+        Artifact restored = scheduler.locked(runId, () -> {
             run(runId);
-            Artifact restored = artifacts.restore(runId, nodeId, type, version, actor.id());
+            Artifact before = artifacts.current(runId, nodeId, type).orElse(null);
+            Artifact r = artifacts.restore(runId, nodeId, type, version, actor.id());
+            changed[0] = before == null || !before.getId().equals(r.getId());
             audit.append(runId, actor.type().name(), actor.id(), "ARTIFACT_ROLLBACK",
                     type + " of " + nodeId + " restored to v" + version, null);
-            return restored;
+            return r;
         });
+        if (changed[0]) changeDetection.autoReplan(runId, nodeId, "rollback of " + type + " to v" + version, actor);
+        return restored;
     }
 
     /** Applies an approval decision to a stage waiting for one. */
