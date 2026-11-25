@@ -47,11 +47,11 @@ if (Test-Path $pw) {
     $pj = Get-Content $pw -Raw | ConvertFrom-Json
     function Get-SpecOk($suite) {
         $ok = $true
-        foreach ($sp in @($suite.specs)) { if (-not $sp.ok) { $ok = $false } }
-        foreach ($child in @($suite.suites)) { if (-not (Get-SpecOk $child)) { $ok = $false } }
+        foreach ($sp in @($suite.specs | Where-Object { $_ })) { if (-not $sp.ok) { $ok = $false } }
+        foreach ($child in @($suite.suites | Where-Object { $_ })) { if (-not (Get-SpecOk $child)) { $ok = $false } }
         return $ok
     }
-    foreach ($suite in @($pj.suites)) { $fileResult[[IO.Path]::GetFileName($suite.file)] = if (Get-SpecOk $suite) { 'PASS' } else { 'FAIL' } }
+    foreach ($suite in @($pj.suites | Where-Object { $_ })) { $fileResult[[IO.Path]::GetFileName($suite.file)] = if (Get-SpecOk $suite) { 'PASS' } else { 'FAIL' } }
 }
 
 $owned = Get-OwnedRequirements -UpToPhase 7
