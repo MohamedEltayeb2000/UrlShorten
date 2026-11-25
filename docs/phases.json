@@ -121,7 +121,7 @@
                        "id":  "P5",
                        "name":  "Governance and resilience",
                        "status":  "COMPLETE",
-                       "publish":  null,
+                       "publish":  "PUBLISHED",
                        "capabilities":  [
                                             "Policy engine",
                                             "Approvals + actor identity",
