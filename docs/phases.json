@@ -175,7 +175,7 @@
                        "id":  "P7",
                        "name":  "Brief conformance",
                        "status":  "COMPLETE",
-                       "publish":  null,
+                       "publish":  "PUBLISHED",
                        "capabilities":  [
                                             "Entry/exit gates",
                                             "Automatic re-plan on upstream change",
