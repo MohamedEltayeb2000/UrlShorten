@@ -193,6 +193,16 @@ An end user creates a short link for a valid URL (optionally with a custom alias
 
 - **FR-030**: System MUST be runnable locally from documented copy-paste steps with a demo mode needing no AI credentials, and MUST include automated tests, architecture documentation, risk/trade-off notes and a demo script.
 
+**Brief conformance (phase 7)**
+
+- **FR-031**: Every stage MUST have an explicit entry gate (all prerequisites succeeded with a current artifact) and exit gate (output stored, evaluated and policy-checked); each gate result MUST be recorded in the audit trail and visible in the run detail.
+- **FR-032**: When an upstream artifact is changed (a human edit or a rollback), System MUST detect it and re-plan automatically: mark downstream artifacts stale, re-run only the affected stages, keep every approval gate, and record the decision lineage.
+- **FR-033**: Approvals for high-impact actions MUST carry a change record (risk class, change ticket and risk justification for high risk), and the command, database-change and production-deployment policy rules MUST evaluate the actions a stage actually proposes.
+- **FR-034**: Safe-stop MUST be cooperative: a running stage that observes a pause MUST stop before storing output and return to ready, and run exactly once more on resume.
+- **FR-035**: The requirements analyst MUST derive goals, constraints and ambiguity from the requirement text (vague terms, missing acceptance criteria, undefined references) and ask questions that name the actual triggers, independent of any scenario label.
+- **FR-036**: Brownfield analysis MUST derive impacted files, data flow and compatibility risks from the code structure of a configured source directory (classes, dependencies, endpoints, tables), not from keywords or comments.
+- **FR-037**: The system MUST be verified end to end in a real browser against the running backend and frontend for the main user journeys.
+
 ### Key Entities
 
 - **Agent Run**: One execution of a requirement; scenario type, raw and normalized requirement, status, plan version, timings.
