@@ -43,22 +43,12 @@ Evidence lives in `docs/`: `traceability.md`, `gates/`, `reviews/`, `walkthrough
 The first security run downloads the NVD vulnerability database and can take hours without an API key:
 set `NVD_API_KEY` (free from nvd.nist.gov) to speed it up. Gitleaks is downloaded into `.tools/` (git-ignored).
 
-## Phase status
-Updated 2026-11-24. Gate columns: Tests / Security / Review / Performance / Eval. `PASS`, `WAIVED` (owner-approved, recorded in
-`docs/reviews/phase-N.md`), `-` (not applicable or not run yet).
-
-| Phase | Scope | Status | Gates (T / S / R / P / E) | Tests |
-|-------|-------|--------|---------------------------|-------|
-| P1 | Shortener core: create, redirect, validation, simple UI | Published (tag `phase-1`) | PASS / WAIVED / PASS / PASS / - | 48 backend, 9 frontend |
-| P2 | Expiry, deactivation, click analytics, idempotency, rate limiting | Published (tag `phase-2`) | PASS / PASS (Spring Framework CVEs suppressed, owner waiver) / PASS / PASS / - | 79 backend, 14 frontend |
-| P3 | Orchestration core (graph, scheduler, parallel + join) | Published (tag `phase-3`) | PASS / PASS / PASS / PASS / - | 129 backend, 26 frontend |
-| P4 | Agents, artifacts, audit, AI evaluation | Published (tag `phase-4`) | PASS / PASS / PASS / PASS / PASS | 179 backend, 35 frontend |
-| P5 | Policy, approvals, retry/fallback, rollback, re-plan | Published (tag `phase-5`) | PASS / PASS / PASS / PASS / PASS | 233 backend, 47 frontend |
-| P6 | Scenarios, metrics, summary, docs | Published (tag `phase-6`) | PASS / PASS / PASS / PASS / PASS | 278 backend, 57 frontend |
-
-Security note: the first full dependency scan (OWASP/NVD) finished after P1 was published and found high-severity CVEs in the
-original dependency versions. Spring Boot, Tomcat, the PostgreSQL driver, log4j and Swagger UI were upgraded in P2 and the scan is
-clean for them. Spring Framework 6.2.19 still has CVEs with no fixed release; they affect features this app does not use and are
-suppressed until 2026-12-31 under an owner-approved waiver (`docs/security/residual-risk.md`).
+## The six phases
+1. **Shortener core** - create and redirect short links with strict URL validation, plus a simple shorten page.
+2. **Hardening and analytics** - link expiry, deactivation, click analytics, idempotent creation and rate limiting.
+3. **Orchestration core** - a persisted workflow graph with parallel stages, joins, pause/resume and restart recovery.
+4. **Agents, artifacts, audit, evaluation** - simulated agents for each stage, versioned artifacts, an audit trail and AI output evaluation.
+5. **Governance and resilience** - approval gates, policy checks, retries with fallback, re-plan and rollback.
+6. **Scenarios, metrics, summary** - Greenfield, Brownfield and Ambiguous demos, run metrics and the final engineering summary.
 
 Generated code and patches are proposals only; nothing is applied, executed or deployed automatically.
