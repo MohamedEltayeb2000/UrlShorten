@@ -11,6 +11,17 @@ export interface RunSummary {
   createdAt: string
 }
 
+/** One stage gate; `passed` is absent when the gate has not been evaluated yet. */
+export interface Gate {
+  passed?: boolean
+  checks: string[]
+}
+
+export interface StageGatesView {
+  entry: Gate
+  exit: Gate
+}
+
 export interface RunNode {
   id: string
   name: string
@@ -21,6 +32,7 @@ export interface RunNode {
   startedAt?: string
   completedAt?: string
   errorSummary?: string
+  gates?: StageGatesView
 }
 
 export interface RunDetail extends RunSummary {

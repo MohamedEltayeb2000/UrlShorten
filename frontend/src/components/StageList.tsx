@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import type { RunNode } from '../api/runs'
+import type { Gate, RunNode } from '../api/runs'
 import StageActions from './StageActions'
 
 interface Props {
@@ -7,6 +7,16 @@ interface Props {
   busy?: boolean
   onRetry?: (nodeId: string) => void
   onReplan?: (nodeId: string, requirement?: string) => void
+}
+
+// The outcome is always written as text (never color alone); the checks are available as a tooltip.
+function GateLine({ label, gate }: { label: string; gate: Gate }) {
+  const outcome = gate.passed === undefined || gate.passed === null ? 'not evaluated' : gate.passed ? 'passed' : 'failed'
+  return (
+    <span title={gate.checks.join('; ')}>
+      {label}: {outcome}
+    </span>
+  )
 }
 
 export default function StageList({ nodes, busy = false, onRetry, onReplan }: Props) {
@@ -38,6 +48,16 @@ export default function StageList({ nodes, busy = false, onRetry, onReplan }: Pr
                     <div>after: {n.dependsOn.map((d) => names.get(d) ?? d).join(', ')}</div>
                   )}
                   <div>Attempts: {n.attempts}</div>
+                  {n.gates && (
+                    <ul className="gates" aria-label={`Gates for ${n.name}`}>
+                      <li>
+                        <GateLine label="Entry gate" gate={n.gates.entry} />
+                      </li>
+                      <li>
+                        <GateLine label="Exit gate" gate={n.gates.exit} />
+                      </li>
+                    </ul>
+                  )}
                   {n.errorSummary && <div className="error">Error: {n.errorSummary}</div>}
                   {onRetry && onReplan && <StageActions node={n} busy={busy} onRetry={onRetry} onReplan={onReplan} />}
                 </li>
