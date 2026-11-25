@@ -107,7 +107,10 @@ with `--shortener.orchestrator.inject-failures=TESTING:3` (see [demo-script.md](
 
 ### What it shows
 
-Analysis grounded in a small seeded legacy service under `fixtures/brownfield/` (plain text, not compiled, read-only). Its
+Analysis grounded in the structure of a small seeded legacy service under `fixtures/brownfield/` (plain text, not compiled,
+read-only). The analyzer scans `.java` and `.sql` files (comments are ignored), builds a class dependency graph (controller to
+service to repository), and finds HTTP endpoints and SQL tables. Point it at another source directory with the
+`shortener.brownfield.path` system property (or `SHORTENER_BROWNFIELD_PATH`). Its
 seeded defect: `LinkService.createLink` inserts a new row on every call, so a retried `POST /links` creates a duplicate short
 link. There is no idempotency key, request fingerprint, unique constraint on the target URL or idempotency table. The system
 does **not** inspect arbitrary repositories.
@@ -116,12 +119,14 @@ does **not** inspect arbitrary repositories.
 
 1. `REQUIREMENTS_ANALYSIS` (confidence 0.85, `SUCCESS`) adds an extra goal ("make retried link creation idempotent without
    breaking existing clients") and records, from reading the fixture:
-   * `impactedFiles`: the four fixture files whose text mentions create / insert / post (`LinkController.java`,
-     `LinkRepository.java`, `LinkService.java`, `schema.sql`);
-   * `dataFlow`: one line per impacted file showing the first matching line;
-   * `compatibilityRisks`: (a) `LinkService.createLink` inserts a new row on every call so a retried `POST /links` creates a
-     duplicate short link; (b) existing clients do not send an `Idempotency-Key` header so it must stay optional; (c) a
-     replayed request must keep the original status code and body shape.
+   * `impactedFiles`: files whose class or table name matches terms of the requirement (here `link`), plus everything on the
+     dependency path from the controller to its tables (`LinkController.java`, `LinkService.java`, `LinkRepository.java`,
+     `schema.sql`);
+   * `dataFlow`: `POST /links -> LinkController.postLink -> LinkService.createLink -> LinkRepository.insert -> table links`;
+   * `compatibilityRisks`, each derived from a finding: no uniqueness constraint on `target_url` although the insert writes
+     it; `LinkService.createLink` inserts without checking for an existing row, so a retried `POST /links` creates a
+     duplicate; the `POST /links` API contract must be kept (new inputs optional, same status and body shape); table `links`
+     is touched so a schema migration must tolerate existing duplicates.
 2. `TASK_DECOMPOSITION` yields one task per goal plus a verification task.
 3. `ARCHITECTURE_DESIGN` copies the impacted files, fixture data flow and compatibility risks, and adds the decision "add
    idempotency to link creation using an Idempotency-Key header and a unique key". `IMPLEMENTATION_PLAN` lists the impacted
@@ -141,10 +146,9 @@ content; `DESIGN` and `CODE_PROPOSAL` repeat them. Open them under `/runs/{id}/a
 
 ### Repeat it
 
-Edit a fixture file (for example mention "idempotent" in `LinkService.java`) and create a new run: the compatibility risks
-change, because they are derived from the fixture text. Revert the file afterwards. Note that
-`schema.sql` already contains the word "idempot" inside a comment, so the analyzer does not emit its schema-specific risk
-(a known quirk of its keyword matching, see [risks-and-tradeoffs.md](risks-and-tradeoffs.md)).
+Edit a fixture file structurally (for example add a lookup of the existing link by target URL to `LinkService.createLink`)
+and create a new run: the "without checking for an existing row" risk disappears, because risks come from the code
+structure. Adding the word "idempotent" in a comment changes nothing. Revert the file afterwards.
 
 ---
 
@@ -164,13 +168,16 @@ classifies risks by severity, lowers its confidence, and the run does not procee
 ### Exact expected behavior
 
 1. `REQUIREMENTS_ANALYSIS` returns status `NEEDS_CLARIFICATION` with confidence 0.45 and a note explaining the low
-   confidence. Its content has:
-   * three **open questions**: who may create links (anyone or authenticated users), whether and when links expire, and the
-     redirect volume per second to support;
+   confidence. The requirement text is analyzed (`RequirementAnalysis`): vague, unmeasurable terms ("safer", "improve"),
+   very short text, conflicting hints and undefined references raise an ambiguity score, and the stage also asks for
+   clarification whenever the score reaches the threshold, even without the `AMBIGUOUS` label. Its content has:
+   * at least three **open questions**, derived from the triggers: for this text, what "safer" means (blocking malicious
+     URLs, preventing abuse, or protecting stored data) and which measurable outcome defines "improve", topped up with a
+     generic question (who may create links, link expiry, redirect volume) to reach three;
    * three **safe assumptions** (links are public, only http and https targets, links do not expire unless set), carried into
      every later stage;
-   * three **risks** with severity prefixes: `HIGH` unclear access control, `MEDIUM` undefined expiry and unbounded storage,
-     `LOW` unknown traffic.
+   * three **risks** with severity prefixes: `HIGH` the unmeasurable terms may be implemented differently than intended,
+     `MEDIUM` undefined expiry and unbounded storage, `LOW` unknown traffic.
 2. The artifact is stored (`REQUIREMENT` v1), the stage enters `WAITING_FOR_APPROVAL` (approval kind `CLARIFICATION`, reason
    "Clarification needed: 3 open question(s)"), audit shows `CLARIFICATION_NEEDED` then `APPROVAL_REQUESTED`, and the run
    becomes `WAITING_FOR_APPROVAL`. Nothing downstream starts.
@@ -195,6 +202,5 @@ classifies risks by severity, lowers its confidence, and the run does not procee
 
 Create the run again with the same text. If you want to see rejection, reject the clarification with a comment, then use
 re-plan on `REQUIREMENTS_ANALYSIS` with a clarified requirement (for example "Make URL links safer by rejecting non-http(s)
-URLs, and add a daily click count per link"). Note that the mock analyst decides ambiguity from the `AMBIGUOUS` scenario
-label, not by understanding the text, so a clarified requirement sent with `scenario=AMBIGUOUS` is still treated as ambiguous;
-create the follow-up run without a scenario (or with `GREENFIELD`) to see it analyzed as clear.
+URLs, and add a daily click count per link"). The mock analyst reads the text, so a precise
+requirement is analyzed as clear (`SUCCESS`) when sent without the `AMBIGUOUS` label; with the label it still asks questions.
