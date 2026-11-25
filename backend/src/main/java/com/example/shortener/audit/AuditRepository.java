@@ -11,4 +11,8 @@ public interface AuditRepository extends Repository<AuditEvent, Long> {
     Page<AuditEvent> findByRunIdOrderByIdAsc(Long runId, Pageable pageable);
 
     long count();
+
+    long countByRunIdAndEventType(Long runId, String eventType);
+
+    long countByEventType(String eventType);
 }
