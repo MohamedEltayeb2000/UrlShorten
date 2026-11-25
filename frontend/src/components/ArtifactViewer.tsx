@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArtifactView, rollbackArtifact } from '../api/artifacts'
+import ArtifactEditForm from './ArtifactEditForm'
 import VersionDiff from './VersionDiff'
 
 /** One (stage, type) group: version selector, provenance, content, proposal banner and diff vs current. */
@@ -13,6 +14,7 @@ export default function ArtifactViewer({
   onChanged?: () => void
 }) {
   const [confirming, setConfirming] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const sorted = [...versions].sort((a, b) => a.version - b.version)
@@ -93,6 +95,25 @@ export default function ArtifactViewer({
             <p role="alert" className="error">
               {err}
             </p>
+          )}
+        </div>
+      )}
+      {sel.status === 'CURRENT' && runId && (
+        <div className="edit">
+          {editing ? (
+            <ArtifactEditForm
+              runId={runId}
+              artifact={sel}
+              onCancel={() => setEditing(false)}
+              onSaved={() => {
+                setEditing(false)
+                onChanged?.()
+              }}
+            />
+          ) : (
+            <button type="button" onClick={() => setEditing(true)}>
+              Edit this version
+            </button>
           )}
         </div>
       )}
