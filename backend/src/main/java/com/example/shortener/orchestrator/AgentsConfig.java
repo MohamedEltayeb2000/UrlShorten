@@ -1,6 +1,7 @@
 package com.example.shortener.orchestrator;
 
 import com.example.shortener.agents.AgentProvider;
+import com.example.shortener.agents.llm.LlmAgentProvider;
 import com.example.shortener.agents.mock.MockAgentProvider;
 import com.example.shortener.evaluation.AgentOutputEvaluator;
 import com.example.shortener.evaluation.EvaluationCriteria;
@@ -15,11 +16,23 @@ import org.springframework.context.annotation.Configuration;
 public class AgentsConfig {
 
     @Bean
-    AgentProvider agentProvider(@Value("${shortener.agents.provider:mock}") String provider) {
-        if (!"mock".equals(provider)) {
-            throw new IllegalStateException("Unknown agent provider '" + provider + "'; only 'mock' is available");
+    AgentProvider agentProvider(
+            @Value("${shortener.agents.provider:mock}") String provider,
+            @Value("${shortener.agents.llm.endpoint:}") String endpoint,
+            @Value("${shortener.agents.llm.api-key:}") String apiKey,
+            @Value("${shortener.agents.llm.model:default}") String model,
+            @Value("${shortener.agents.llm.timeout-ms:10000}") long timeoutMs) {
+        if ("mock".equals(provider)) {
+            return new MockAgentProvider();
         }
-        return new MockAgentProvider();
+        if ("llm".equals(provider)) {
+            if (endpoint == null || endpoint.isBlank()) {
+                throw new IllegalStateException(
+                        "shortener.agents.provider=llm requires shortener.agents.llm.endpoint (env LLM_ENDPOINT) to be set");
+            }
+            return new LlmAgentProvider(endpoint, apiKey, model, timeoutMs);
+        }
+        throw new IllegalStateException("Unknown agent provider '" + provider + "'; use 'mock' or 'llm'");
     }
 
     @Bean

@@ -34,6 +34,12 @@ management:
 shortener:
   public-base-url: ${PUBLIC_BASE_URL:http://localhost:8080}
   code-length: 7
+  agents:
+    provider: ${AGENT_PROVIDER:mock}
+    llm:
+      endpoint: ${LLM_ENDPOINT:}
+      api-key: ${LLM_API_KEY:}
+      model: ${LLM_MODEL:default}
 
 springdoc:
   swagger-ui:

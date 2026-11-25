@@ -117,7 +117,8 @@ public class AgentStageHandler implements StageHandler {
         Agent agent = source.forStage(ex.nodeId());
         AgentResult raw = agent.run(input);
         AgentResult result = fallback ? asFallback(raw) : raw;
-        OutputEvaluation evaluation = evaluator.evaluate(input, result, fallback ? asFallback(agent.run(input)) : agent.run(input));
+        OutputEvaluation evaluation = evaluator.evaluate(input, result,
+                !source.deterministic() ? result : fallback ? asFallback(agent.run(input)) : agent.run(input));
         if (!evaluation.passed()) {
             audit.append(ex.runId(), "AGENT", agent.name(), "OUTPUT_FLAGGED",
                     "Stage " + ex.nodeId() + " output failed evaluation: " + evaluation.failedCriteria(), null);
