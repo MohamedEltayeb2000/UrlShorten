@@ -30,6 +30,8 @@ cd frontend; npm install; npm run dev
 ```powershell
 cd backend;  mvn test
 cd frontend; npm test -- --run
+cd frontend; npx playwright install chromium   # once
+cd frontend; npm run e2e                        # real-browser journeys (starts backend + frontend; ports 8080 and 5173 must be free)
 ```
 
 ## Phase gates
@@ -43,12 +45,13 @@ Evidence lives in `docs/`: `traceability.md`, `gates/`, `reviews/`, `walkthrough
 The first security run downloads the NVD vulnerability database and can take hours without an API key:
 set `NVD_API_KEY` (free from nvd.nist.gov) to speed it up. Gitleaks is downloaded into `.tools/` (git-ignored).
 
-## The six phases
+## The seven phases
 1. **Shortener core** - create and redirect short links with strict URL validation, plus a simple shorten page.
 2. **Hardening and analytics** - link expiry, deactivation, click analytics, idempotent creation and rate limiting.
 3. **Orchestration core** - a persisted workflow graph with parallel stages, joins, pause/resume and restart recovery.
 4. **Agents, artifacts, audit, evaluation** - simulated agents for each stage, versioned artifacts, an audit trail and AI output evaluation.
 5. **Governance and resilience** - approval gates, policy checks, retries with fallback, re-plan and rollback.
 6. **Scenarios, metrics, summary** - Greenfield, Brownfield and Ambiguous demos, run metrics and the final engineering summary.
+7. **Brief conformance** - explicit stage entry/exit gates, cooperative safe-stop, automatic re-plan when an upstream artifact changes, change control on approvals, text-driven requirement analysis, structural brownfield analysis and real-browser end-to-end tests.
 
 Generated code and patches are proposals only; nothing is applied, executed or deployed automatically.

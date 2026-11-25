@@ -12,7 +12,8 @@ than the code and tests prove.
 | Phase gates (tests + traceability, security, review, performance, evaluation, publish) | Built and used for every phase |
 | P1 shortener core; P2 expiry, analytics, idempotency, rate limiting | Published (`phase-1`, `phase-2`) |
 | P3 orchestration core; P4 agents, artifacts, audit, evaluation; P5 policy, approvals, retry/fallback, re-plan, rollback | Published (`phase-3` to `phase-5`) |
-| P6 scenarios, metrics (incl. MTTR), engineering summary, optional LLM provider, documentation | Published (`phase-6`); see `docs/publish-log.md` |
+| P6 scenarios, metrics (incl. MTTR), engineering summary, optional LLM provider, documentation | Published (`phase-6`) |
+| P7 brief conformance (gates, auto re-plan, change control, safe-stop, analysis, browser e2e) | Published with the `phase-7` tag when its gates pass; see `docs/publish-log.md` |
 
 The orchestration layer, which the brief calls the critical differentiator, is **implemented and tested** (graph, state machine,
 parallel scheduler with joins, approvals, retry, fallback, safe-stop, rollback, re-plan, audit, metrics). Remaining gaps are in
@@ -107,22 +108,17 @@ commits (backend, frontend, scripts, specs, evidence).
 
 ## 4. Gaps against the brief and limitations
 
-These are real. None is hidden in the specs.
+Phase 7 closed the gaps found by comparing the build with the brief: explicit entry/exit gates, automatic re-plan on upstream change,
+change control with firing policy rules, cooperative safe-stop, text-driven requirement analysis, structural brownfield analysis, MTTR,
+and verification in a real browser and against PostgreSQL. What remains, honestly:
 
-1. **MTTR - now implemented in P6** (it was missing from the original plan). The brief lists MTTR; the spec lists success rate, retries, rollbacks, durations,
-   stage latency and failed/blocked counts. Add it to the metrics requirement and task T135/T140.
-2. **Explicit entry/exit gates per stage** are implied by dependencies and approval gates but not named as entry and exit
-   conditions in the spec. Add them to the workflow definition and `GraphValidator` tests.
-3. **Compliance and change-control policies** are covered by the six minimum policies plus approvals, but there is no
-   separate change-control record (change ticket, risk class). Consider adding a risk classification to approvals.
-4. **Scalability** is limited to a bounded thread pool and database constraints on one machine; there is no
-   multi-instance or queue design. This is a stated trade-off.
-5. **Entry/exit gates** are expressed through dependencies and approval gates rather than separate entry/exit conditions per stage.
-6. **Phase 1's vulnerability scan did not finish** before publishing; it is waived and must be re-run.
-7. **No human has used the UI yet.** The walkthrough was performed by the coding agent over the API plus component tests.
-8. **No real LLM is used or evaluated.** Demo mode is fully deterministic; the optional provider is planned.
-
-Items 1-3 are small edits to the spec and tasks; I can apply them on request before Phase 3.
+1. **The agents are simulations.** Ambiguity detection, decomposition and code analysis are deterministic heuristics; they are not a language model.
+   The optional LLM provider supports real model output but has only been tested against a stub endpoint.
+2. **Identity is a demo header,** not authentication, so "agents cannot approve their own work" holds for honest callers only.
+3. **Single instance.** The scheduler lock, rate limiter and failure injector are in-process.
+4. **Security waiver.** Spring Framework 6.2.19 CVEs are suppressed until 2026-12-31 (no fixed release; affected features unused).
+5. **No human first-use test or screen-reader pass** has been done; the browser tests are automated.
+6. **Change tickets are validated by format only;** no ticketing system is consulted.
 
 ## Appendix: the assessment brief as received
 
